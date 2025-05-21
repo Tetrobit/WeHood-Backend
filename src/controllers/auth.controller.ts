@@ -3,6 +3,9 @@ import * as jwt from "jsonwebtoken";
 import { AppDataSource } from "../config/database";
 import { User } from "../entities/User";
 
+// @ts-ignore
+import pkceChallenge from "pkce-challenge";
+
 export class AuthController {
   async register(req: Request, res: Response) {
     try {
@@ -79,5 +82,19 @@ export class AuthController {
     } catch (error) {
       return res.status(500).json({ message: "Ошибка сервера" });
     }
+  }
+
+  async getVKLink(_req: Request, res: Response) {
+    console.log("getVKLink");
+    const vkid_appid = process.env.VKID_APPID;
+    const redirect_uri = process.env.SERVER_URL;
+    
+    const {
+      code_verifier: _code_verifier,
+      code_challenge,
+    } = await pkceChallenge();
+
+    const vkLink = `https://id.vk.com/authorize?client_id=${vkid_appid}&redirect_uri=${redirect_uri}&code_challenge=${code_challenge}&code_challenge_method=S256&response_type=code`;
+    return res.json({ vkLink });
   }
 } 
