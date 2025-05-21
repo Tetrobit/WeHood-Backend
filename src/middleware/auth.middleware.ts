@@ -28,7 +28,7 @@ export const authMiddleware = async (
     }
 
     req.user = user;
-    next();
+    return next();
   } catch (error) {
     return res.status(401).json({ message: "Неверный токен" });
   }
