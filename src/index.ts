@@ -33,4 +33,4 @@ AppDataSource.initialize()
   })
   .catch((error) => {
     console.error("Ошибка при подключении к базе данных:", error);
-  }); 
+  });

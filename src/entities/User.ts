@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm";
 import * as bcrypt from "bcryptjs";
+import { DeviceLogin } from "./DeviceLogin";
 
 @Entity("users")
 export class User {
@@ -20,6 +21,9 @@ export class User {
 
   @Column()
   lastName: string;
+
+  @OneToMany(() => DeviceLogin, deviceLogin => deviceLogin.user)
+  deviceLogins: DeviceLogin[];
 
   @CreateDateColumn()
   createdAt: Date;
