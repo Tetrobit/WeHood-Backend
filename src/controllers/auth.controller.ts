@@ -92,9 +92,9 @@ export class AuthController {
   }
 
   async redirectApp(req: Request, res: Response) {
-    console.log(req.query);
-    const deeplink = `wehood://(auth)`;
-    
+    const params = new URLSearchParams(req.query as Record<string, string>);
+    const deeplink = `wehood://vk-auth?${params.toString()}`;
+
     res.render('auth-redirect', { deeplink });
   }
 }
