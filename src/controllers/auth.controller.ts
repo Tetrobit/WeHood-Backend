@@ -103,8 +103,6 @@ export class AuthController {
   }
 
   async loginVK(req: Request, res: Response) {
-    console.log(req.query);
-    console.log(req.body);
     const { code, code_verifier, device_id, state } = req.body;
 
     const data = await vkapi.exchangeCode(code as string, code_verifier as string, device_id as string, state as string);
@@ -134,14 +132,14 @@ export class AuthController {
     user.email = userInfo.user.email;
     user.firstName = profileInfo.response.first_name;
     user.lastName = profileInfo.response.last_name;
-    user.avatar = userInfo.user.avatar;
+    user.avatar = profileInfo.response.photo_200;
     user = await userRepository.save(user);
 
     const deviceLogin = new DeviceLogin();
-    deviceLogin.deviceName = req.query.device_name as string;
-    deviceLogin.deviceOS = req.query.device_os as string;
-    deviceLogin.deviceOSVersion = req.query.device_os_version as string;
-    deviceLogin.deviceParams = req.query.device_params as Record<string, any>;
+    deviceLogin.deviceName = req.body.device_name as string;
+    deviceLogin.deviceOS = req.body.device_os as string;
+    deviceLogin.deviceOSVersion = req.body.device_os_version as string;
+    deviceLogin.deviceParams = req.body.device_params as Record<string, any>;
     deviceLogin.refreshToken = refreshToken;
     deviceLogin.accessToken = accessToken;
     deviceLogin.refreshTokenExpiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 180);
