@@ -4,6 +4,7 @@ import cors from "cors";
 import { config } from "dotenv";
 import { AppDataSource } from "./config/database";
 import authRoutes from "./routes/auth.routes";
+import * as path from "path";
 
 config();
 
@@ -11,6 +12,10 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Настройка EJS
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 // Routes
 app.use("/api/auth", authRoutes);

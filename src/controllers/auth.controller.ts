@@ -92,7 +92,9 @@ export class AuthController {
   }
 
   async redirectApp(req: Request, res: Response) {
-    console.log(req.query);
-    return res.redirect("wehood://(auth)");
+    const { code, state } = req.query;
+    const deeplink = `wehood://(auth)?code=${code}&state=${state}`;
+    
+    res.render('auth-redirect', { deeplink });
   }
 }
