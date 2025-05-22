@@ -90,7 +90,7 @@ export class AuthController {
     const vkAppId = process.env.VKID_APPID;
     const redirectUri = `${process.env.SERVER_URL}/api/auth/redirect-app`;
 
-    return res.json({ vkAppId, redirectUri, ...(await pkceChallenge()) });
+    return res.json({ vkAppId, redirectUri, ...(await pkceChallenge()), scope: process.env.VKID_SCOPE });
   }
 
   
