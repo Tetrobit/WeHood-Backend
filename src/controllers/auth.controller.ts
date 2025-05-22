@@ -84,17 +84,15 @@ export class AuthController {
     }
   }
 
-  async getVKLink(_req: Request, res: Response) {
-    console.log("getVKLink");
-    const vkid_appid = process.env.VKID_APPID;
-    const redirect_uri = process.env.SERVER_URL;
-    
-    const {
-      code_verifier: _code_verifier,
-      code_challenge,
-    } = await pkceChallenge();
+  async getVKParameters(_req: Request, res: Response) {
+    const vkAppId = process.env.VKID_APPID;
+    const redirectUri = `${process.env.SERVER_URL}/api/auth/redirect-app`;
 
-    const vkLink = `https://id.vk.com/authorize?client_id=${vkid_appid}&redirect_uri=${redirect_uri}&code_challenge=${code_challenge}&code_challenge_method=S256&response_type=code`;
-    return res.json({ vkLink });
+    return res.json({ vkAppId, redirectUri, ...(await pkceChallenge()) });
   }
-} 
+
+  async redirectApp(req: Request, res: Response) {
+    console.log(req.query);
+    return res.redirect("wehood://(auth)");
+  }
+}

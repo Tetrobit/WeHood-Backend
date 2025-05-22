@@ -6,6 +6,7 @@ const authController = new AuthController();
 
 router.post("/register", authController.register);
 router.post("/login", authController.login);
-router.get("/vk-link", authController.getVKLink);
+router.get("/vk-parameters", authController.getVKParameters);
+router.get("/redirect-app", authController.redirectApp);
 
 export default router; 
