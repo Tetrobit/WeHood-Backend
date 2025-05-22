@@ -103,6 +103,8 @@ export class AuthController {
   }
 
   async loginVK(req: Request, res: Response) {
+    console.log(req.query);
+    console.log(req.body);
     const { code, code_verifier, device_id, state } = req.body;
 
     const data = await vkapi.exchangeCode(code as string, code_verifier as string, device_id as string, state as string);
