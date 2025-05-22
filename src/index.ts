@@ -20,9 +20,9 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 // Routes
+app.use(errorMiddleware);
 app.use("/api/auth", authRoutes);
 app.use("/api/utils", utilsRoutes);
-app.use(errorMiddleware);
 
 const PORT = process.env.PORT || 3000;
 
