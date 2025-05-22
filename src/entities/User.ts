@@ -10,6 +10,9 @@ export class User {
   @Column({ unique: true, nullable: true })
   vkId: string;
 
+  @Column()
+  avatar: string;
+
   @Column({ unique: true })
   email: string;
 

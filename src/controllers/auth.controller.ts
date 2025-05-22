@@ -124,12 +124,14 @@ export class AuthController {
 
     if (!user) {
       user = new User();
-      user.vkId = data.user_id.toString();
-      user.email = userInfo.user.email;
-      user.firstName = profileInfo.response.first_name;
-      user.lastName = profileInfo.response.last_name;
-      user = await userRepository.save(user);
     }
+
+    user.vkId = data.user_id.toString();
+    user.email = userInfo.user.email;
+    user.firstName = profileInfo.response.first_name;
+    user.lastName = profileInfo.response.last_name;
+    user.avatar = userInfo.user.avatar;
+    user = await userRepository.save(user);
 
     const deviceLogin = new DeviceLogin();
     deviceLogin.deviceName = req.query.device_name as string;
@@ -141,15 +143,12 @@ export class AuthController {
     deviceLogin.accessTokenExpiresAt = new Date(Date.now() + 1000 * 60 * 60);
     deviceLogin.user = user!;
 
-    const refreshTokenResponse = await vkapi.refreshToken(refreshToken, device_id as string);
-    console.log(refreshTokenResponse);
-
     await deviceLoginRepository.save(deviceLogin);
 
     const token = jwt.sign(
       {
         id: user.id,
-        deviceLoginId: deviceLogin.id,
+        device_login_id: deviceLogin.id,
       },
       process.env.JWT_SECRET || "secret",
     );
