@@ -5,6 +5,7 @@ import { config } from "dotenv";
 import { AppDataSource } from "./config/database";
 import authRoutes from "./routes/auth.routes";
 import * as path from "path";
+import utilsRoutes from "./routes/utils.routes";
 
 config();
 
@@ -19,6 +20,7 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/utils", utilsRoutes);
 
 const PORT = process.env.PORT || 3000;
 

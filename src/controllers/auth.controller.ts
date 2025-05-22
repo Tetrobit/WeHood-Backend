@@ -93,8 +93,35 @@ export class AuthController {
 
   async redirectApp(req: Request, res: Response) {
     const params = new URLSearchParams(req.query as Record<string, string>);
-    const deeplink = `wehood://auth/?${params.toString()}`;
+    const deeplink = `wehood://auth?${params.toString()}`;
 
     res.render('auth-redirect', { deeplink });
+  }
+
+  async loginVK(req: Request, res: Response) {
+    
+    const urlParams = new URLSearchParams({
+      client_id: process.env.VKID_APPID || "",
+      grant_type: "authorization_code",
+      code_verifier: req.query.code_verifier as string,
+      device_id: req.query.device_id as string,
+      redirect_uri: `${process.env.SERVER_URL}/api/auth/redirect-app`,
+      state: req.query.state as string,
+    });
+
+    const url = `https://id.vk.com/oauth2/auth?${urlParams.toString()}`;
+    const response = await fetch(url, {
+      method: "POST",
+      body: new URLSearchParams({
+        code: req.query.code as string,
+      }),
+    });
+
+    const data = await response.json();
+    const accessToken = data.access_token;
+    const refreshToken = data.refresh_token;
+
+    console.log(data);
+    return res.json({ url });
   }
 }

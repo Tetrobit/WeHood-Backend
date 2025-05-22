@@ -8,5 +8,6 @@ router.post("/register", authController.register);
 router.post("/login", authController.login);
 router.get("/vk-parameters", authController.getVKParameters);
 router.get("/redirect-app", authController.redirectApp);
+router.post("/login-vk", authController.loginVK);
 
 export default router; 
