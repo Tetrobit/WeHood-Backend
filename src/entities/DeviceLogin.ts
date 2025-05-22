@@ -10,7 +10,10 @@ export class DeviceLogin {
     deviceName: string;
 
     @Column({ nullable: true })
-    deviceType: string;
+    deviceOS: string;
+
+    @Column({ nullable: true })
+    deviceOSVersion: string;
 
     @Column("jsonb", { nullable: true })
     deviceParams: Record<string, any>;

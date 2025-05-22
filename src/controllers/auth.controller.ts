@@ -139,7 +139,8 @@ export class AuthController {
 
     const deviceLogin = new DeviceLogin();
     deviceLogin.deviceName = req.query.device_name as string;
-    deviceLogin.deviceType = req.query.device_type as string;
+    deviceLogin.deviceOS = req.query.device_os as string;
+    deviceLogin.deviceOSVersion = req.query.device_os_version as string;
     deviceLogin.deviceParams = req.query.device_params as Record<string, any>;
     deviceLogin.refreshToken = refreshToken;
     deviceLogin.accessToken = accessToken;
