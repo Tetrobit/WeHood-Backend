@@ -106,8 +106,6 @@ export class AuthController {
     const { code, code_verifier, device_id, state } = req.body;
 
     const data = await vkapi.exchangeCode(code as string, code_verifier as string, device_id as string, state as string);
-    console.log(data);
-    const idToken: string = data.id_token;
     const accessToken: string = data.access_token;
     const refreshToken: string = data.refresh_token;
 
@@ -115,14 +113,8 @@ export class AuthController {
     const deviceLoginRepository = AppDataSource.getRepository(DeviceLogin);
     let user = await userRepository.findOne({ where: { vkId: data.user_id.toString() } });
 
-    const userPublicInfo = await vkapi.getUserPublicInfo(idToken);
-    console.log(userPublicInfo) ;
-
     const profileInfo = await vkapi.getProfileInfo(accessToken);
-    console.log(profileInfo);
-
     const userInfo = await vkapi.getUserInfo(accessToken);
-    console.log(userInfo);
 
     if (!user) {
       user = new User();
