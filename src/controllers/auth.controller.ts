@@ -93,6 +93,8 @@ export class AuthController {
     return res.json({ vkAppId, redirectUri, ...(await pkceChallenge()) });
   }
 
+  
+
   async redirectApp(req: Request, res: Response) {
     const params = new URLSearchParams(req.query as Record<string, string>);
     const deeplink = `wehood://auth?${params.toString()}`;
@@ -101,7 +103,7 @@ export class AuthController {
   }
 
   async loginVK(req: Request, res: Response) {
-    const { code, code_verifier, device_id, state } = req.query;
+    const { code, code_verifier, device_id, state } = req.body;
 
     const data = await vkapi.exchangeCode(code as string, code_verifier as string, device_id as string, state as string);
     console.log(data);
