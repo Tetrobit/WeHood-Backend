@@ -5,6 +5,8 @@ import { User } from "../entities/User";
 
 // @ts-ignore
 import pkceChallenge from "pkce-challenge";
+import * as vkapi from "@/vkapi";
+import { DeviceLogin } from "@/entities/DeviceLogin";
 
 export class AuthController {
   async register(req: Request, res: Response) {
@@ -99,29 +101,59 @@ export class AuthController {
   }
 
   async loginVK(req: Request, res: Response) {
-    
-    const urlParams = new URLSearchParams({
-      client_id: process.env.VKID_APPID || "",
-      grant_type: "authorization_code",
-      code_verifier: req.query.code_verifier as string,
-      device_id: req.query.device_id as string,
-      redirect_uri: `${process.env.SERVER_URL}/api/auth/redirect-app`,
-      state: req.query.state as string,
-    });
+    const { code, code_verifier, device_id, state } = req.query;
 
-    const url = `https://id.vk.com/oauth2/auth?${urlParams.toString()}`;
-    const response = await fetch(url, {
-      method: "POST",
-      body: new URLSearchParams({
-        code: req.query.code as string,
-      }),
-    });
-
-    const data = await response.json();
-    const accessToken = data.access_token;
-    const refreshToken = data.refresh_token;
-
+    const data = await vkapi.exchangeCode(code as string, code_verifier as string, device_id as string, state as string);
     console.log(data);
-    return res.json({ url });
+    const idToken: string = data.id_token;
+    const accessToken: string = data.access_token;
+    const refreshToken: string = data.refresh_token;
+
+    const userRepository = AppDataSource.getRepository(User);
+    const deviceLoginRepository = AppDataSource.getRepository(DeviceLogin);
+    let user = await userRepository.findOne({ where: { vkId: data.user_id.toString() } });
+
+    const userPublicInfo = await vkapi.getUserPublicInfo(idToken);
+    console.log(userPublicInfo) ;
+
+    const profileInfo = await vkapi.getProfileInfo(accessToken);
+    console.log(profileInfo);
+
+    const userInfo = await vkapi.getUserInfo(accessToken);
+    console.log(userInfo);
+
+    if (!user) {
+      user = new User();
+      user.vkId = data.user_id.toString();
+      user.email = userInfo.user.email;
+      user.firstName = profileInfo.response.first_name;
+      user.lastName = profileInfo.response.last_name;
+      user = await userRepository.save(user);
+    }
+
+    const deviceLogin = new DeviceLogin();
+    deviceLogin.deviceName = req.query.device_name as string;
+    deviceLogin.deviceType = req.query.device_type as string;
+    deviceLogin.deviceParams = req.query.device_params as Record<string, any>;
+    deviceLogin.refreshToken = refreshToken;
+    deviceLogin.accessToken = accessToken;
+    deviceLogin.refreshTokenExpiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 180);
+    deviceLogin.accessTokenExpiresAt = new Date(Date.now() + 1000 * 60 * 60);
+    deviceLogin.user = user!;
+
+    const refreshTokenResponse = await vkapi.refreshToken(refreshToken, device_id as string);
+    console.log(refreshTokenResponse);
+
+    await deviceLoginRepository.save(deviceLogin);
+
+    const token = jwt.sign(
+      {
+        id: user.id,
+        deviceLoginId: deviceLogin.id,
+      },
+      process.env.JWT_SECRET || "secret",
+    );
+
+    return res.json({ token });
   }
 }

@@ -6,23 +6,26 @@ export class DeviceLogin {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
-    @Column()
+    @Column({ nullable: true })
     deviceName: string;
 
-    @Column()
+    @Column({ nullable: true })
     deviceType: string;
 
     @Column("jsonb", { nullable: true })
     deviceParams: Record<string, any>;
 
-    @Column({ nullable: true })
+    @Column()
     refreshToken: string;
 
-    @Column({ nullable: true })
+    @Column()
     accessToken: string;
 
-    @Column({ nullable: true })
+    @Column()
     refreshTokenExpiresAt: Date;
+
+    @Column()
+    accessTokenExpiresAt: Date;
 
     @ManyToOne(() => User, user => user.deviceLogins)
     user: User;
