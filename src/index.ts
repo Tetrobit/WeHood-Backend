@@ -12,6 +12,8 @@ config();
 
 const app = express();
 
+app.use(errorMiddleware);
+
 app.use(cors());
 app.use(express.json());
 
@@ -20,7 +22,6 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 // Routes
-app.use(errorMiddleware);
 app.use("/api/auth", authRoutes);
 app.use("/api/utils", utilsRoutes);
 
