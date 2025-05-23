@@ -5,6 +5,7 @@ import cors from "cors";
 import { config } from "dotenv";
 import { AppDataSource } from "./config/database";
 import authRoutes from "./routes/auth.routes";
+import telemetryRoutes from "./routes/telemetry.routes";
 import * as path from "path";
 import utilsRoutes from "./routes/utils.routes";
 import { errorMiddleware } from "./middleware/error.middleware";
@@ -25,6 +26,7 @@ app.set('views', path.join(__dirname, 'views'));
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/utils", utilsRoutes);
+app.use("/api/telemetry", telemetryRoutes);
 
 app.use(errorMiddleware);
 
