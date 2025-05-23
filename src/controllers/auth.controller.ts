@@ -86,14 +86,21 @@ export class AuthController {
     }
   }
 
+  async checkEmailExists(req: Request, res: Response) {
+    const { email } = req.body;
+
+    const userRepository = AppDataSource.getRepository(User);
+    const user = await userRepository.findOne({ where: { email } });
+
+    return res.json({ exists: !!user });
+  }
+
   async getVKParameters(_req: Request, res: Response) {
     const vkAppId = process.env.VKID_APPID;
     const redirectUri = `${process.env.SERVER_URL}/api/auth/redirect-app`;
 
     return res.json({ vkAppId, redirectUri, ...(await pkceChallenge()), scope: process.env.VKID_SCOPE });
   }
-
-  
 
   async redirectApp(req: Request, res: Response) {
     const params = new URLSearchParams(req.query as Record<string, string>);
