@@ -148,6 +148,19 @@ export class AuthController {
       process.env.JWT_SECRET || "secret",
     );
 
-    return res.json({ token });
+    return res.json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatar: user.avatar,
+        vkId: user.vkId,
+      },
+      device: {
+        id: deviceLogin.id,
+      }
+    });
   }
 }
