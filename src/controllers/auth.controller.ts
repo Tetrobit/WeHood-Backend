@@ -87,12 +87,12 @@ export class AuthController {
   }
 
   async checkEmailExists(req: Request, res: Response) {
-    const { email } = req.body;
+    const { email } = req.query;
 
     const userRepository = AppDataSource.getRepository(User);
-    const user = await userRepository.findOne({ where: { email } });
+    const user = await userRepository.findOne({ where: { email: email as string } });
 
-    return res.json({ exists: !!user });
+    return res.json({ exists: !!user, hasPassword: !!user?.password });
   }
 
   async getVKParameters(_req: Request, res: Response) {
@@ -116,22 +116,30 @@ export class AuthController {
     const accessToken: string = data.access_token;
     const refreshToken: string = data.refresh_token;
 
-    const userRepository = AppDataSource.getRepository(User);
-    const deviceLoginRepository = AppDataSource.getRepository(DeviceLogin);
-    let user = await userRepository.findOne({ where: { vkId: data.user_id.toString() } });
-
     const profileInfo = await vkapi.getProfileInfo(accessToken);
     const userInfo = await vkapi.getUserInfo(accessToken);
 
-    if (!user) {
+    const userRepository = AppDataSource.getRepository(User);
+    const deviceLoginRepository = AppDataSource.getRepository(DeviceLogin);
+    let userByEmail: User | null = await userRepository.findOne({ where: { email: userInfo.user.email } });
+    let userByVkId: User | null = await userRepository.findOne({ where: { vkId: data.user_id.toString() } });
+    let user: User | null = null;
+
+    if (!userByVkId && userByEmail) {
+      user = userByEmail;
+    }
+    else if (!userByVkId && !userByEmail) {
       user = new User();
+      user.avatar = profileInfo.response.photo_200;
+      user.email = userInfo.user.email;
+      user.firstName = profileInfo.response.first_name;
+      user.lastName = profileInfo.response.last_name;
+      user.vkId = data.user_id.toString();
+    }
+    else {
+      user = userByVkId!;
     }
 
-    user.vkId = data.user_id.toString();
-    user.email = userInfo.user.email;
-    user.firstName = profileInfo.response.first_name;
-    user.lastName = profileInfo.response.last_name;
-    user.avatar = profileInfo.response.photo_200;
     user = await userRepository.save(user);
 
     const deviceLogin = new DeviceLogin();

@@ -9,5 +9,6 @@ router.post("/login", authController.login);
 router.get("/vk-parameters", authController.getVKParameters);
 router.get("/redirect-app", authController.redirectApp);
 router.post("/login-vk", authController.loginVK);
+router.get("/check-email-exists", authController.checkEmailExists);
 
 export default router; 
