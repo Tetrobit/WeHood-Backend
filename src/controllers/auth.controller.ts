@@ -7,8 +7,19 @@ import { User } from "../entities/User";
 import pkceChallenge from "pkce-challenge";
 import * as vkapi from "@/vkapi";
 import { DeviceLogin } from "@/entities/DeviceLogin";
+import EmailService from "@/services/email.service";
 
 export class AuthController {
+  async sendVerificationCode(req: Request, res: Response) {
+    const { email } = req.query;
+
+    const verificationCode = await EmailService.sendVerificationCode(email as string);
+
+    return res.json({
+      id: verificationCode.id,
+    });
+  }
+
   async register(req: Request, res: Response) {
     try {
       const { email, password, firstName, lastName } = req.body;
