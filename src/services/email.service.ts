@@ -29,33 +29,14 @@ export class EmailService {
             subject: 'Код подтверждения',
             text: `Ваш код подтверждения: ${code}`,
             html: `<p>Ваш код подтверждения: <strong>${code}</strong></p>`,
+            sender: {
+                name: 'Служба поддержки WeHood',
+                address: 'noreply@wehood.zenlog.ru'
+            }
         });
         console.log("Sended code to", email);
 
         return verificationCode;
-    }
-
-    async verifyCode(email: string, code: string): Promise<boolean> {
-        const verificationCode = await AppDataSource.getRepository(VerificationCode)
-            .findOne({
-                where: {
-                    email,
-                    code,
-                    isUsed: false
-                },
-                order: {
-                    createdAt: 'DESC'
-                }
-            });
-
-        if (!verificationCode) {
-            return false;
-        }
-
-        verificationCode.isUsed = true;
-        await AppDataSource.getRepository(VerificationCode).save(verificationCode);
-        
-        return true;
     }
 }
 

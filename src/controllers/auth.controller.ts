@@ -8,6 +8,7 @@ import pkceChallenge from "pkce-challenge";
 import * as vkapi from "@/vkapi";
 import { DeviceLogin } from "@/entities/DeviceLogin";
 import EmailService from "@/services/email.service";
+import { VerificationCode } from "@/entities/VerificationCode";
 
 export class AuthController {
   async sendVerificationCode(req: Request, res: Response) {
@@ -22,13 +23,29 @@ export class AuthController {
 
   async register(req: Request, res: Response) {
     try {
-      const { email, password, firstName, lastName } = req.body;
+      const { firstName, lastName, email, password, verificationCodeId } = req.body;
 
       const userRepository = AppDataSource.getRepository(User);
       const existingUser = await userRepository.findOne({ where: { email } });
 
       if (existingUser) {
         return res.status(400).json({ message: "Пользователь с таким email уже существует" });
+      }
+
+      const verificationCode = await AppDataSource.getRepository(VerificationCode)
+        .findOne({
+          where: {
+            id: verificationCodeId as string,
+            email: email as string,
+            isUsed: true
+          },
+          order: {
+            createdAt: 'DESC'
+          }
+        });
+
+      if (!verificationCode) {
+        return res.status(400).json({ message: "Код подтверждения не найден" });
       }
 
       const user = new User();
@@ -40,24 +57,67 @@ export class AuthController {
       await user.hashPassword();
       await userRepository.save(user);
 
+      const deviceLogin = new DeviceLogin();
+      deviceLogin.deviceName = req.body.device_name as string;
+      deviceLogin.deviceOS = req.body.device_os as string;
+      deviceLogin.deviceOSVersion = req.body.device_os_version as string;
+      deviceLogin.deviceParams = req.body.device_params as Record<string, any>;
+      deviceLogin.user = user;
+
+      await AppDataSource.getRepository(DeviceLogin).save(deviceLogin);
+
       const token = jwt.sign(
-        { id: user.id },
+        {
+          id: user.id,
+          device_login_id: deviceLogin.id,
+        },
         process.env.JWT_SECRET || "secret",
       );
+      
 
       return res.status(201).json({
-        message: "Пользователь успешно зарегистрирован",
         token,
         user: {
           id: user.id,
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          avatar: user.avatar,
+          vkId: user.vkId,
         },
+        device: {
+          id: deviceLogin.id,
+        }
       });
     } catch (error) {
       return res.status(500).json({ message: "Ошибка сервера" });
     }
+  }
+  
+
+  async verifyVerificationCode(req: Request, res: Response) {
+    const { verificationCodeId: id, email, code } = req.body;
+    console.log(req.query);
+    const verificationCode = await AppDataSource.getRepository(VerificationCode)
+      .findOne({
+        where: {
+          id: id as string,
+          email: email as string,
+          isUsed: false
+        },
+        order: {
+          createdAt: 'DESC'
+        }
+      });
+    
+    if (!verificationCode || verificationCode.code !== code) {
+      return res.status(400).json({ ok: false, message: "Неверный код подтверждения" });
+    }
+
+    verificationCode.isUsed = true;
+    await AppDataSource.getRepository(VerificationCode).save(verificationCode);
+    
+    return res.json({ ok: true, message: "Код подтверждения успешно проверен" });
   }
 
   async login(req: Request, res: Response) {
@@ -68,29 +128,47 @@ export class AuthController {
       const user = await userRepository.findOne({ where: { email } });
 
       if (!user) {
-        return res.status(401).json({ message: "Неверный email или пароль" });
+        return res.status(401).json({ ok: false, message: "Неверный email или пароль" });
       }
 
       const isValidPassword = await user.comparePassword(password);
 
       if (!isValidPassword) {
-        return res.status(401).json({ message: "Неверный email или пароль" });
+        return res.status(401).json({ ok: false, message: "Неверный email или пароль" });
       }
+      
+      const deviceLogin = new DeviceLogin();
+      deviceLogin.deviceName = req.body.device_name as string;
+      deviceLogin.deviceOS = req.body.device_os as string;
+      deviceLogin.deviceOSVersion = req.body.device_os_version as string;
+      deviceLogin.deviceParams = req.body.device_params as Record<string, any>;
+      deviceLogin.user = user;
+
+      await AppDataSource.getRepository(DeviceLogin).save(deviceLogin);
 
       const token = jwt.sign(
-        { id: user.id },
+        {
+          id: user.id,
+          device_login_id: deviceLogin.id,
+        },
         process.env.JWT_SECRET || "secret",
       );
+      
 
-      return res.json({
-        message: "Успешный вход",
+      return res.status(200).json({
+        ok: true,
         token,
         user: {
           id: user.id,
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          avatar: user.avatar,
+          vkId: user.vkId,
         },
+        device: {
+          id: deviceLogin.id,
+        }
       });
     } catch (error) {
       return res.status(500).json({ message: "Ошибка сервера" });

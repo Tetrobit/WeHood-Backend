@@ -18,16 +18,16 @@ export class DeviceLogin {
     @Column("jsonb", { nullable: true })
     deviceParams: Record<string, any>;
 
-    @Column()
+    @Column({ nullable: true })
     refreshToken: string;
 
-    @Column()
+    @Column({ nullable: true })
     accessToken: string;
 
-    @Column()
+    @Column({ nullable: true })
     refreshTokenExpiresAt: Date;
 
-    @Column()
+    @Column({ nullable: true })
     accessTokenExpiresAt: Date;
 
     @ManyToOne(() => User, user => user.deviceLogins)

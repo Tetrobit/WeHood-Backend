@@ -10,7 +10,7 @@ export class User {
   @Column({ unique: true, nullable: true })
   vkId: string;
 
-  @Column()
+  @Column({ nullable: true })
   avatar: string;
 
   @Column({ unique: true })
@@ -19,10 +19,10 @@ export class User {
   @Column({ nullable: true})
   password: string;
 
-  @Column()
+  @Column({ nullable: true })
   firstName: string;
 
-  @Column()
+  @Column({ nullable: true })
   lastName: string;
 
   @OneToMany(() => DeviceLogin, deviceLogin => deviceLogin.user)
@@ -35,7 +35,7 @@ export class User {
   updatedAt: Date;
 
   async hashPassword() {
-    this.password = await bcrypt.hash(this.password, 10);
+    this.password = await bcrypt.hashSync(this.password);
   }
 
   async comparePassword(password: string): Promise<boolean> {
