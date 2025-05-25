@@ -267,4 +267,8 @@ export class AuthController {
       }
     });
   }
+
+  async isTokenValid(_req: Request, res: Response) {
+    return res.json({ ok: true });
+  }
 }

@@ -3,9 +3,13 @@ import * as jwt from "jsonwebtoken";
 import { AppDataSource } from "../config/database";
 import { User } from "../entities/User";
 
-export interface AuthRequest extends Request {
-  verified: boolean;
-  user?: User;
+declare global {
+  namespace Express {
+    interface Request {
+      verified: boolean;
+      user?: User;
+    }
+  }
 }
 
 export interface JwtPayload {
@@ -23,40 +27,28 @@ export interface JwtPayload {
   }
 }
 
-export const authMiddleware = async (
-  req: AuthRequest,
-  res: Response,
+export const softAuthMiddleware = async (
+  req: Request,
+  _res: Response,
   next: NextFunction
 ) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
 
-    if (!token) {
-      req.user = undefined;
-      req.verified = false;
-      return next();
-    }
+    if (!token) throw new Error("No token provided");
 
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret") as JwtPayload;
-      const userRepository = AppDataSource.getRepository(User);
-      const user = await userRepository.findOne({ where: { id: decoded.user.id } });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret") as JwtPayload;
+    const userRepository = AppDataSource.getRepository(User);
+    const user = await userRepository.findOne({ where: { id: decoded.user.id } });
 
-      if (!user) {
-        req.verified = false;
-        req.user = undefined;
-        return next();
-      }
+    if (!user) throw new Error("User not found");
 
-      req.verified = true;
-      req.user = user;
-    } catch (error) {
-      req.verified = false;
-      req.user = undefined;
-    } finally {
-      return next();
-    }
+    req.verified = true;
+    req.user = user;
   } catch (error) {
-    return res.status(401).json({ message: "Неверный токен" });
+    req.verified = false;
+    req.user = undefined;
+  } finally {
+    return next();
   }
-}; 
+};
