@@ -8,6 +8,7 @@ const geocodingController = new GeocodingController();
 
 router.get('/forward', geocodingController.forwardGeocode);
 router.get('/reverse', geocodingController.reverseGeocode);
+router.get('/ip', geocodingController.getLocationByIp);
 
 router.use([softAuthMiddleware, authGuard]);
 
