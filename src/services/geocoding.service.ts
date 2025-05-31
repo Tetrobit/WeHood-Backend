@@ -57,14 +57,29 @@ export class GeocodingService {
                 throw new Error('Координаты не найдены');
             }
 
-            const geoObject = featureMember[0].GeoObject;
-            return { data: response.data };
-            return {
-                address: geoObject.metaDataProperty.GeocoderMetaData.text,
-                coordinates: {
-                    latitude,
-                    longitude
+            let attributes: Record<string, Record<string, number>> = {};
+            const featureMembers = response.data.response.GeoObjectCollection.featureMember;
+            for (let featureMember of featureMembers) {
+                const Components = featureMember.GeoObject.metaDataProperty.GeocoderMetaData.Address.Components;
+                for (let Component of Components) {
+                    if (!attributes[Component.kind]) {
+                        attributes[Component.kind] = {};
+                    }
+                    if (!attributes[Component.kind][Component.name]) {
+                        attributes[Component.kind][Component.name] = 0;
+                    }
+                    attributes[Component.kind][Component.name] += 1;
                 }
+            }
+
+            let result: Record<string, string> = {};
+            for (let [kind, values] of Object.entries(attributes)) {
+                result[kind] = Object.entries(values).sort((a, b) => b[1] - a[1])[0][0]
+            }
+
+            return {
+                original_response: response.data.response,
+                attributes: result
             };
         } catch (error) {
             throw new Error('Ошибка при обратном геокодировании');
@@ -95,4 +110,4 @@ export class GeocodingService {
             throw new Error('Ошибка при определении местоположения по IP');
         }
     }
-} 
+}
