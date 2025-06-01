@@ -9,6 +9,7 @@ import telemetryRoutes from "./routes/telemetry.routes";
 import * as path from "path";
 import utilsRoutes from "./routes/utils.routes";
 import geocodingRoutes from "./routes/geocoding.routes";
+import weatherRoutes from "./routes/weather.routes";
 import { errorMiddleware } from "./middleware/error.middleware";
 import bodyParser from "body-parser";
 
@@ -29,6 +30,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/utils", utilsRoutes);
 app.use("/api/telemetry", telemetryRoutes);
 app.use("/api/geocoding", geocodingRoutes);
+app.use("/api/weather", weatherRoutes);
 
 app.use(errorMiddleware);
 
