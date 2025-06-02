@@ -212,6 +212,9 @@ export class AuthController {
     const deviceLoginRepository = AppDataSource.getRepository(DeviceLogin);
     let userByEmail: User | null = await userRepository.findOne({ where: { email: userInfo.user.email } });
     let userByVkId: User | null = await userRepository.findOne({ where: { vkId: data.user_id.toString() } });
+
+    if (!userInfo.user.email || userInfo.user.email.trim() == '') userByEmail = null;
+
     let user: User | null = null;
 
     if (!userByVkId && userByEmail) {
