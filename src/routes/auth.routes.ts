@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { AuthController } from "../controllers/auth.controller";
-import { softAuthMiddleware } from "@/middleware/auth.middleware";
 
 const router = Router();
 const authController = new AuthController();
@@ -14,7 +13,5 @@ router.get("/check-email-exists", authController.checkEmailExists);
 router.get("/send-verification-code", authController.sendVerificationCode);
 router.post("/verify-verification-code", authController.verifyVerificationCode);
 router.get("/is-token-valid", authController.isTokenValid);
-
-router.use([softAuthMiddleware]);
 
 export default router; 

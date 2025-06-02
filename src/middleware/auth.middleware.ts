@@ -13,18 +13,9 @@ declare global {
 }
 
 export interface JwtPayload {
-  token: string;
-  user: {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    avatar: string;
-    vkId: string;
-  },
-  device: {
-    id: string;
-  }
+  id: string;
+  device_login_id: string;
+  iat: number;
 }
 
 export const softAuthMiddleware = async (
@@ -39,7 +30,7 @@ export const softAuthMiddleware = async (
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret") as JwtPayload;
     const userRepository = AppDataSource.getRepository(User);
-    const user = await userRepository.findOne({ where: { id: decoded.user.id } });
+    const user = await userRepository.findOne({ where: { id: decoded.id } });
 
     if (!user) throw new Error("User not found");
 

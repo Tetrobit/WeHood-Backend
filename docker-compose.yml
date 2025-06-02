@@ -1,33 +1,38 @@
+version: '3.8'
+
 services:
   app:
     build: .
     ports:
-      - "127.0.0.1:3003:3000"
+      - "3000:3000"
     environment:
       - NODE_ENV=development
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
-      - DB_DATABASE=wehood_db
-      - JWT_SECRET=your_jwt_secret_key
-      - JWT_EXPIRES_IN=24h
+      - DB_DATABASE=wehood
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
     depends_on:
       - postgres
     volumes:
       - .:/app
       - /app/node_modules
+      - media_uploads:/app/uploads
     networks:
       - wehood-network
 
   postgres:
-    image: postgres:14-alpine
+    image: postgis/postgis:15-3.3
     ports:
-      - "127.0.0.1:5432:5432"
+      - "5432:5432"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=wehood_db
+      - POSTGRES_DB=wehood
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -35,6 +40,7 @@ services:
 
 volumes:
   postgres_data:
+  media_uploads:
 
 networks:
   wehood-network:
