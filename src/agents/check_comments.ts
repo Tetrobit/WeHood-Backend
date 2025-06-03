@@ -1,12 +1,8 @@
 import gigachat from "./gigachat";
 import { Message } from 'gigachat/interfaces';
-import prompt from 'prompt';
-import { z } from "zod";                        // Преобразование типов
 
-let messages: Message[] = [
-    {
-        role: 'system',
-        content: `# Ты – система фильтрации комментариев.
+
+const content_system = `# Ты – система фильтрации комментариев.
                     Твоя задача – преобразовать текстовые комментарии, содержащие нецензурную лексику, грубые выражения и агрессивные высказывания, в вежливую и корректную форму, соблюдая следующие принципы:
 
                     - Прямые оскорбления («идиот», «дебил») заменяются нейтральными замечаниями («неправ»).
@@ -89,29 +85,49 @@ let messages: Message[] = [
                     - Полнота учета всех требований и нюансов задачи
                     - Наличие примеров для прояснения сложных моментов
                     - Понятная структура prompt с использованием форматирования`
+
+let messages: Message[] = [
+    {
+        role: 'system',
+        content: content_system,
     }
 ]
 
-const promptSchema = z.object({
-    "Введите комментарий:": z.union([z.string(), z.any()]).transform(String),
-});
+const normalizeBool = (val: any) => Number(val) === 0 ? false : true;
 
-export const start = async (user_prompt: true) => {
-    if (user_prompt) {
-        // Получаем и валидируем ввод
-        const result = promptSchema.parse(await prompt.get(['Введите комментарий:']));
+export const start = async (words: string) => {
+    const bool_content = `Является ли следующий комментарий пользователем оскорбительным и нужно ли его исправлять: "${words}", верни 1 если считаешь его оскорбительным и 0 в противном случае`;
+    messages.push({
+        role: 'user',
+        content: bool_content,
+    })
+    const response_1 = await gigachat.chat({messages})
+
+    const bool_answer_1 = normalizeBool(response_1.choices[0]?.message.content)
+    const finish_reason_1 = response_1.choices[0].finish_reason === 'blacklist' ? true : false
+
+    // console.log(response_1.choices[0]?.message.content)
+    console.log(`Нужно исправлять комментарий? -- ${bool_answer_1}`)
+
+    if (finish_reason_1) {
+        console.log('Заблокировать сообщение пользователя!')
+    }
+    else if (bool_answer_1) {
+        messages.push({
+            role: 'assistant',
+            content: response_1.choices[0]?.message.content,
+        })
         // Формируем контент с гарантированно строковым значением
-        const content = `Исправь следующий комментарий пользователя: "${result['Введите комментарий:']}"`;
+        const content = `Исправь следующий комментарий пользователя: "${words}"`;
         messages.push({
             role: 'user',
             content: content,
         });
+
+        const response_2 = await gigachat.chat({
+            messages
+        });
+        // console.log(response.choices[0]);
+        console.log(response_2.choices[0]?.message.content);
     }
-
-    const response = await gigachat.chat({
-        messages
-    });
-
-    console.log(response.choices[0]);
-    console.log(response.choices[0]?.message.content);
 }
