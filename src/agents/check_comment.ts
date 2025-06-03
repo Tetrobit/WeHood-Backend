@@ -1,55 +1,28 @@
 import { HumanMessage, AIMessage, SystemMessage, BaseMessage } from "@langchain/core/messages";
-import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { StateGraph, MessagesAnnotation, Annotation } from "@langchain/langgraph";
 
 import { z } from "zod";
-import { Agent } from 'node:https';
-import { GigaChat } from "langchain-gigachat"
+import { llm } from "./gigachat";
 
-const httpsAgent = new Agent({
-    rejectUnauthorized: false, // Отключение проверки сертификатов НУЦ Минцифры
-});
-
-const llm = new GigaChat({
-    credentials: process.env.GIGACHAT_API_KEY,
-    model: 'GigaChat-2',
-    httpsAgent,
-});
-
-// Define the tools for the agent to use
-const tools: any[] = [];
-const toolNode = new ToolNode(tools);
 const model = llm.withStructuredOutput(z.object({
-  is_bad: z.boolean(),
+  ok: z.boolean(),
   reason: z.string().optional(),
+  toxicity_score: z.number({ description: "Toxicity score of the comment from 0 to 1" }),
 }));
-
-// Define the function that determines whether to continue or not
-function shouldContinue({ messages }: typeof MessagesAnnotation.State) {
-  const lastMessage = messages[messages.length - 1] as AIMessage;
-
-  // If the LLM makes a tool call, then we route to the "tools" node
-  if (lastMessage.tool_calls?.length) {
-    return "tools";
-  }
-  // Otherwise, we stop (reply to the user) using the special "__end__" node
-  return "__end__";
-}
 
 // Define the function that calls the model
 async function callModel(state: typeof MessagesAnnotation.State) {
   const systemMessage = new SystemMessage(`
       You are a helpful assistant that checks if a comment is bad.
       You will be given a comment and you will need to check if it is bad.
-      If it is bad, you will return is_bad true and reason.
-      If it is not bad, you will return is_bad false and reason.
+      If it is bad, you will return ok false and reason.
+      If it is not bad, you will return ok true and reason.
       Reason should be a short description of why the comment is bad.
       Also write reason in russian.
       Don't add any other text to your response and fields in json.
   `);
   const response = await model.invoke([systemMessage, ...state.messages]);
-  // Хороший рецепт приготовления. Мне понравилось :)
-  console.log(response);
+
   // We return a list, because this will get added to the existing list
   return { messages: [], verdict: response };
 }
@@ -61,34 +34,35 @@ const MyAnnotation = Annotation.Root({
     default: () => [],
   }),
   verdict: Annotation<{
-    is_bad: boolean,
+    ok: boolean,
     reason?: string,
+    toxicity_score: number,
   }>({
     reducer: (_prev, curr) => ({
-      is_bad: curr.is_bad,
+      ok: curr.ok,
       reason: curr.reason,
+      toxicity_score: curr.toxicity_score,
     }),
   }),
 });
 
 const workflow = new StateGraph(MyAnnotation)
   .addNode("agent", callModel)
-  .addEdge("__start__", "agent") // __start__ is a special name for the entrypoint
-  .addNode("tools", toolNode)
-  .addEdge("tools", "agent")
-  .addConditionalEdges("agent", shouldContinue);
+  .addEdge("__start__", "agent")
+  .addEdge("agent", "__end__")
 
 // Finally, we compile it into a LangChain Runnable.
 const app = workflow.compile();
 
 export async function checkComment(comment: string): Promise<{
-  is_bad: boolean;
+  ok: boolean;
   reason?: string;
+  toxicity_score: number;
 }> {
   // Use the agent
   const finalState = await app.invoke({
     messages: [new HumanMessage(comment)],
   });
-  console.log(finalState);
+
   return finalState.verdict;
 }
