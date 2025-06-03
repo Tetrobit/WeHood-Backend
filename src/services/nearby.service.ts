@@ -97,12 +97,32 @@ export class NearbyService {
         }
     }
 
-    async incrementViews(postId: number): Promise<{ views: number, likes: number, liked: boolean }> {
+    async incrementViews(postId: number, user?: User): Promise<{ views: number, likes: number, liked: boolean }> {
         const post = await this.nearbyPostRepository.findOne({ where: { id: postId } });
         if (!post) throw new Error('Post not found');
 
         post.views++;
         await this.nearbyPostRepository.save(post);
-        return { views: post.views, likes: post.likes, liked: false };
+
+        let liked = false;
+        if (user) {
+            const existingLike = await this.nearbyLikeRepository.findOne({
+                where: { user: { id: user.id }, post: { id: postId } }
+            });
+            liked = !!existingLike;
+        }
+
+        return { views: post.views, likes: post.likes, liked };
+    }
+
+    async getComments(postId: number): Promise<NearbyComment[]> {
+        const post = await this.nearbyPostRepository.findOne({ where: { id: postId } });
+        if (!post) throw new Error('Post not found');
+
+        return this.nearbyCommentRepository.find({
+            where: { post: { id: postId } },
+            relations: ['author'],
+            order: { createdAt: 'DESC' }
+        });
     }
 }

@@ -40,4 +40,11 @@ router.post(
     nearbyController.incrementViews.bind(nearbyController)
 );
 
+// Получение комментариев к посту
+router.get(
+    '/posts/:postId/comments',
+    authGuard,
+    nearbyController.getComments.bind(nearbyController)
+);
+
 export default router; 

@@ -85,8 +85,19 @@ export class NearbyController {
     async incrementViews(req: Request, res: Response) {
         try {
             const { postId } = req.params;
-            const result = await this.nearbyService.incrementViews(parseInt(postId));
+            const user = req.user;
+            const result = await this.nearbyService.incrementViews(parseInt(postId), user);
             return res.json(result);
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
+        }
+    }
+
+    async getComments(req: Request, res: Response) {
+        try {
+            const { postId } = req.params;
+            const comments = await this.nearbyService.getComments(parseInt(postId));
+            return res.json(comments);
         } catch (error) {
             return res.status(400).json({ error: error.message });
         }
