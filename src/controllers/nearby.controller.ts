@@ -32,11 +32,14 @@ export class NearbyController {
     async getNearbyPosts(req: Request, res: Response) {
         try {
             const { latitude, longitude, radius } = req.query;
+            const user = req.user;
             
             const posts = await this.nearbyService.getNearbyPosts(
                 parseFloat(latitude as string),
                 parseFloat(longitude as string),
-                parseFloat(radius as string) || 1000
+                parseFloat(radius as string) || 1000,
+                user,
+                req.query.type as 'image' | 'video'
             );
 
             return res.json(posts);
@@ -68,12 +71,12 @@ export class NearbyController {
             const user = req.user!;
             const { postId } = req.params;
 
-            const isLiked = await this.nearbyService.toggleLike(
+            const result = await this.nearbyService.toggleLike(
                 user!,
                 parseInt(postId)
             );
 
-            return res.json({ isLiked });
+            return res.json(result);
         } catch (error) {
             return res.status(400).json({ error: error.message });
         }
@@ -82,8 +85,8 @@ export class NearbyController {
     async incrementViews(req: Request, res: Response) {
         try {
             const { postId } = req.params;
-            await this.nearbyService.incrementViews(parseInt(postId));
-            return res.json({ success: true });
+            const result = await this.nearbyService.incrementViews(parseInt(postId));
+            return res.json(result);
         } catch (error) {
             return res.status(400).json({ error: error.message });
         }
