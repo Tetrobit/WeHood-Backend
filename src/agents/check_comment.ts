@@ -1,6 +1,6 @@
-import { HumanMessage, AIMessage, SystemMessage } from "@langchain/core/messages";
-import { createReactAgent, ToolNode } from "@langchain/langgraph/prebuilt";
-import { StateGraph, MessagesAnnotation } from "@langchain/langgraph";
+import { HumanMessage, AIMessage, SystemMessage, BaseMessage } from "@langchain/core/messages";
+import { ToolNode } from "@langchain/langgraph/prebuilt";
+import { StateGraph, MessagesAnnotation, Annotation } from "@langchain/langgraph";
 
 import { z } from "zod";
 import { Agent } from 'node:https';
@@ -13,33 +13,16 @@ const httpsAgent = new Agent({
 const llm = new GigaChat({
     credentials: process.env.GIGACHAT_API_KEY,
     model: 'GigaChat-2',
-    httpsAgent
-})
+    httpsAgent,
+});
 
 // Define the tools for the agent to use
 const tools: any[] = [];
 const toolNode = new ToolNode(tools);
-
-const agent = createReactAgent({
-  llm,
-  tools,
-  responseFormat: {
-    prompt: `
-      You are a helpful assistant that checks if a comment is bad.
-      You will be given a comment and you will need to check if it is bad.
-      If it is bad, you will return is_bad true and reason.
-      If it is not bad, you will return is_bad false and reason.
-      Reason should be a short description of why the comment is bad.
-      Also write reason in russian.
-      Don't add any other text to your response and fields in json.
-    `,
-    schema: z.object({
-      is_bad: z.boolean(),
-      reason: z.string(),
-    }),
-    type: "json_object",
-  },
-})
+const model = llm.withStructuredOutput(z.object({
+  is_bad: z.boolean(),
+  reason: z.string().optional(),
+}));
 
 // Define the function that determines whether to continue or not
 function shouldContinue({ messages }: typeof MessagesAnnotation.State) {
@@ -55,18 +38,40 @@ function shouldContinue({ messages }: typeof MessagesAnnotation.State) {
 
 // Define the function that calls the model
 async function callModel(state: typeof MessagesAnnotation.State) {
-  const response = await agent.invoke({
-    messages: [...state.messages],
-  });
-
-  console.log(response.messages[response.messages.length - 1]);
-  console.log("Structured response: ", response.structuredResponse);
+  const systemMessage = new SystemMessage(`
+      You are a helpful assistant that checks if a comment is bad.
+      You will be given a comment and you will need to check if it is bad.
+      If it is bad, you will return is_bad true and reason.
+      If it is not bad, you will return is_bad false and reason.
+      Reason should be a short description of why the comment is bad.
+      Also write reason in russian.
+      Don't add any other text to your response and fields in json.
+  `);
+  const response = await model.invoke([systemMessage, ...state.messages]);
+  // Хороший рецепт приготовления. Мне понравилось :)
+  console.log(response);
   // We return a list, because this will get added to the existing list
-  return { messages: response.messages };
+  return { messages: [], verdict: response };
 }
 
 // Define a new graph
-const workflow = new StateGraph(MessagesAnnotation)
+const MyAnnotation = Annotation.Root({
+  messages: Annotation<BaseMessage[]>({
+    reducer: (prev, curr) => [...prev, ...curr],
+    default: () => [],
+  }),
+  verdict: Annotation<{
+    is_bad: boolean,
+    reason?: string,
+  }>({
+    reducer: (_prev, curr) => ({
+      is_bad: curr.is_bad,
+      reason: curr.reason,
+    }),
+  }),
+});
+
+const workflow = new StateGraph(MyAnnotation)
   .addNode("agent", callModel)
   .addEdge("__start__", "agent") // __start__ is a special name for the entrypoint
   .addNode("tools", toolNode)
@@ -76,10 +81,14 @@ const workflow = new StateGraph(MessagesAnnotation)
 // Finally, we compile it into a LangChain Runnable.
 const app = workflow.compile();
 
-export async function checkComment(comment: string) {
+export async function checkComment(comment: string): Promise<{
+  is_bad: boolean;
+  reason?: string;
+}> {
   // Use the agent
   const finalState = await app.invoke({
     messages: [new HumanMessage(comment)],
   });
-  return finalState.messages[finalState.messages.length - 1].content;
+  console.log(finalState);
+  return finalState.verdict;
 }
