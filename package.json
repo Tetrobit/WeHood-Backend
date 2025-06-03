@@ -8,9 +8,12 @@
     "dev": "nodemon src/index.ts",
     "build": "tsc",
     "typeorm": "typeorm-ts-node-commonjs",
-    "test:comments": "tsx --env-file=.env ./test/check_comments.ts"
+    "test:check-comment": "tsx --env-file=.env ./test/check_comment.ts"
   },
   "dependencies": {
+    "@langchain/community": "^0.3.45",
+    "@langchain/core": "^0.3.57",
+    "@langchain/langgraph": "^0.3.0",
     "@types/axios": "^0.14.4",
     "@types/multer": "^1.4.11",
     "@types/nodemailer": "^6.4.14",
@@ -26,6 +29,7 @@
     "express-async-errors": "^3.1.1",
     "gigachat": "^0.0.14",
     "jsonwebtoken": "^9.0.2",
+    "langchain-gigachat": "^0.0.13",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.9",
     "pg": "^8.11.3",
