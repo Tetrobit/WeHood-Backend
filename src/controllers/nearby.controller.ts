@@ -12,7 +12,7 @@ export class NearbyController {
     async createPost(req: Request, res: Response) {
         try {
             const user = req.user!;
-            const { title, description, latitude, longitude, type, fileId } = req.body;
+            const { title, description, latitude, longitude, type, fileId, address } = req.body;
 
             const post = await this.nearbyService.createPost(user, {
                 title,
@@ -20,7 +20,8 @@ export class NearbyController {
                 latitude: parseFloat(latitude),
                 longitude: parseFloat(longitude),
                 fileId: fileId,
-                type: type as 'image' | 'video'
+                type: type as 'image' | 'video',
+                address
             });
 
             return res.json(post);

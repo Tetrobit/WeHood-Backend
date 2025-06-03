@@ -21,6 +21,7 @@ export class NearbyService {
         longitude: number;
         type: 'image' | 'video';
         fileId: string;
+        address?: string;
     }): Promise<NearbyPost> {
         const post = this.nearbyPostRepository.create({
             ...data,
@@ -28,7 +29,7 @@ export class NearbyService {
             location: {
                 type: 'Point',
                 coordinates: [data.longitude, data.latitude]
-            }
+            },
         });
 
         const savedPost = await this.nearbyPostRepository.save(post);

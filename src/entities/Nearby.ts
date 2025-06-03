@@ -21,6 +21,9 @@ export class NearbyPost {
     @Column({ type: 'geometry', spatialFeatureType: 'Point', srid: 4326, default: () => 'ST_SetSRID(ST_MakePoint(0, 0), 4326)' })
     location: Geometry;
 
+    @Column({ nullable: true })
+    address: string;
+
     @ManyToOne(() => User)
     author: User;
 
