@@ -96,7 +96,7 @@ const promptSchema = z.object({
     "Введите комментарий:": z.union([z.string(), z.any()]).transform(String),
 });
 
-const start = async (user_prompt: true) => {
+export const start = async (user_prompt: true) => {
     if (user_prompt) {
         // Получаем и валидируем ввод
         const result = promptSchema.parse(await prompt.get(['Введите комментарий:']));
@@ -115,9 +115,3 @@ const start = async (user_prompt: true) => {
     console.log(response.choices[0]);
     console.log(response.choices[0]?.message.content);
 }
-
-async function main() {
-    start(true)
-}
-
-main();
