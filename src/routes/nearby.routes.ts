@@ -47,4 +47,18 @@ router.get(
     nearbyController.getComments.bind(nearbyController)
 );
 
+// Удаление поста
+router.delete(
+    '/posts/:postId',
+    authGuard,
+    nearbyController.deletePost.bind(nearbyController)
+);
+
+// Удаление комментария
+router.delete(
+    '/comments/:commentId',
+    authGuard,
+    nearbyController.deleteComment.bind(nearbyController)
+);
+
 export default router; 
