@@ -55,9 +55,9 @@ const workflow = new StateGraph(MyAnnotation)
 const app = workflow.compile();
 
 export async function checkComment(comment: string): Promise<{
-  ok: boolean;
+  ok?: boolean;
   reason?: string;
-  toxicity_score: number;
+  toxicity_score?: number;
 }> {
   // Use the agent
   const finalState = await app.invoke({
