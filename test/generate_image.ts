@@ -1,5 +1,7 @@
 import prompts from 'prompts';
-import { generateGuaranteedImage } from "../src/agents/generate_image";
+import { generateImageAndUpload } from "../src/agents/generate_image";
+import { uploadFile } from '../src/services/upload.service';
+import fs from 'fs';
 
 async function main() {
     const { prompt } = await prompts({
@@ -8,8 +10,8 @@ async function main() {
         message: 'Введите prompt',
     });
 
-    const uuid = await generateGuaranteedImage(prompt);
-    console.log(uuid);
+    const uri = await generateImageAndUpload(prompt);
+    console.log(process.env.MEDIA_SERVER + '/files/' + uri!.fileId);
 }
 
 main();
