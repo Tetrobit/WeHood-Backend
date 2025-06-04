@@ -54,7 +54,7 @@ const workflow = new StateGraph(MyAnnotation)
 // Finally, we compile it into a LangChain Runnable.
 const app = workflow.compile();
 
-export async function checkComment(comment: string): Promise<{
+export async function checkComment(comment: string): Promise<undefined | {
   ok?: boolean;
   reason?: string;
   toxicity_score?: number;
