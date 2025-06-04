@@ -8,17 +8,17 @@ export async function generateImage(prompt: string) {
             credentials: process.env.GIGACHAT_API_KEY,
             httpsAgent: new Agent({
                 rejectUnauthorized: false,
-                timeout: 100000,
+                timeout: 20000,
             }),
             model: 'GigaChat-2',
-            timeout: 100000,
+            timeout: 20,
         });
-        console.log(await gigachat.balance());
+
         const response = await gigachat.chat({
             messages: [
                 {
                     role: 'system',
-                    content: 'Сгенерируй одну картинку. Не генерируй много картинок. Не генерируй текст, только одну картинку.',
+                    content: 'Сгенерируй одну картинку.',
                 },
                 {
                     role: 'user',
@@ -26,10 +26,8 @@ export async function generateImage(prompt: string) {
                 },
             ],
             function_call: 'auto',
-            n: 1,
-            profanity_check: false
+            n: 1
         });
-        console.dir(response, { depth: null });
 
         const detectedImage = detectImage(response.choices[0]?.message.content ?? '');
         const image = await gigachat.getImage(detectedImage!.uuid!);
@@ -37,7 +35,21 @@ export async function generateImage(prompt: string) {
         fs.writeFileSync(`uploads/${detectedImage!.uuid!}.jpg`, image.content, 'binary');
         return detectedImage!.uuid!;
     } catch (error) {
-        console.log(error);
         return null;
     }
+}
+
+export async function generateGuaranteedImage(prompt: string) {
+    for (let i = 0; i < 3; i++) {
+        try {
+            const uuid = await generateImage(prompt);
+            if (uuid) {
+                return uuid;
+            }
+        } catch (error) {
+            // ignore
+        }
+    }
+
+    return null;
 }
