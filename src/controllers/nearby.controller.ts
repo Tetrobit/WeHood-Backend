@@ -1,3 +1,4 @@
+import { checkComment } from '@/agents/check_comment';
 import { NearbyService } from '../services/nearby.service';
 import { Request, Response } from 'express';
 
@@ -55,13 +56,26 @@ export class NearbyController {
             const { postId } = req.params;
             const { text } = req.body;
 
+            const verdict = await checkComment(text);
+
+            if (!verdict?.ok) {
+                return res.status(400).json({
+                    ok: false,
+                    reason: verdict?.reason,
+                    toxicity_score: verdict?.toxicity_score
+                });
+            }
+
             const comment = await this.nearbyService.addComment(
                 user!,
                 parseInt(postId),
                 text
             );
 
-            return res.json(comment);
+            return res.json({
+                ok: true,
+                ...comment,
+            });
         } catch (error) {
             return res.status(400).json({ error: error.message });
         }
