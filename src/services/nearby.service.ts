@@ -144,7 +144,7 @@ export class NearbyService {
     async deleteComment(commentId: number, userId: string): Promise<NearbyComment> {
         const comment = await this.nearbyCommentRepository.findOne({ 
             where: { id: commentId },
-            relations: ['author']
+            relations: ['author', 'post'],
         });
         
         if (!comment) throw new Error('Comment not found');
