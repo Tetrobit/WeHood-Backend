@@ -1,6 +1,7 @@
 import { checkComment } from '@/agents/check_comment';
 import { NearbyService } from '../services/nearby.service';
 import { Request, Response } from 'express';
+import { summarizeComments } from '@/agents/summ_comments';
 
 
 export class NearbyController {
@@ -137,6 +138,20 @@ export class NearbyController {
 
             const comment = await this.nearbyService.deleteComment(commentId, user.id);
             return res.json(comment);
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
+        }
+    }
+
+    async summarizeComments(req: Request, res: Response) {
+        try {
+            const { postId } = req.params;
+            const comments = await this.nearbyService.getComments(parseInt(postId));
+            const summary = await summarizeComments(comments.map(comment => comment.text));
+            return res.json({
+                ok: true,
+                summary
+            });
         } catch (error) {
             return res.status(400).json({ error: error.message });
         }

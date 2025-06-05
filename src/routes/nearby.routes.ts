@@ -61,4 +61,10 @@ router.delete(
     nearbyController.deleteComment.bind(nearbyController)
 );
 
+router.get(
+    '/posts/:postId/comments/summarize',
+    authGuard,
+    nearbyController.summarizeComments.bind(nearbyController)
+);
+
 export default router; 
