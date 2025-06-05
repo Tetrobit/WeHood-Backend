@@ -1,5 +1,5 @@
 import { HumanMessage, SystemMessage, BaseMessage } from "@langchain/core/messages";
-import { StateGraph, MessagesAnnotation, Annotation } from "@langchain/langgraph";
+import { StateGraph, Annotation } from "@langchain/langgraph";
 
 import { z } from "zod";
 import { llm } from "./gigachat";
