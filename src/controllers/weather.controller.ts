@@ -33,7 +33,6 @@ export class WeatherController {
         try {
             const weatherData = JSON.stringify(req.body);
             const recommendation = await WeatherRec(weatherData);
-            console.log(recommendation);
             res.json({ ok: true, recommendation: recommendation.recomendation });
         } catch (error) {
             console.error('Error generating clothing recommendation:', error);
