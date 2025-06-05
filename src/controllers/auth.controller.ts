@@ -9,6 +9,8 @@ import * as vkapi from "@/vkapi";
 import { DeviceLogin } from "@/entities/DeviceLogin";
 import EmailService from "@/services/email.service";
 import { VerificationCode } from "@/entities/VerificationCode";
+import { generateImageAndUpload } from "@/agents/generate_image";
+import { getFileUrl } from "@/services/upload.service";
 
 export class AuthController {
   async sendVerificationCode(req: Request, res: Response) {
@@ -273,5 +275,104 @@ export class AuthController {
 
   async isTokenValid(_req: Request, res: Response) {
     return res.json({ ok: true });
+  }
+
+  async updateProfile(req: Request, res: Response) {
+    try {
+      const { firstName, lastName, avatar } = req.body;
+      const userId = (req as any).user.id;
+
+      const userRepository = AppDataSource.getRepository(User);
+      const user = await userRepository.findOne({ where: { id: userId } });
+
+      if (!user) {
+        return res.status(404).json({ message: "Пользователь не найден" });
+      }
+
+      if (firstName) user.firstName = firstName;
+      if (lastName) user.lastName = lastName;
+      if (avatar) user.avatar = avatar;
+
+      await userRepository.save(user);
+
+      return res.json({
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatar: user.avatar
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Ошибка сервера" });
+    }
+  }
+
+  async getProfile(req: Request, res: Response) {
+    try {
+      const userId = (req as any).user.id;
+
+      const userRepository = AppDataSource.getRepository(User);
+      const user = await userRepository.findOne({ where: { id: userId } });
+
+      if (!user) {
+        return res.status(404).json({ message: "Пользователь не найден" });
+      }
+
+      return res.json({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatar: user.avatar,
+        vkId: user.vkId
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Ошибка сервера" });
+    }
+  }
+
+  async getUserById(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+
+      const userRepository = AppDataSource.getRepository(User);
+      const user = await userRepository.findOne({ where: { id } });
+
+      if (!user) {
+        return res.status(404).json({ message: "Пользователь не найден" });
+      }
+
+      return res.json({
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatar: user.avatar,
+        vkId: user.vkId,
+        email: user.email
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Ошибка сервера" });
+    }
+  }
+
+  async generateAvatar(req: Request, res: Response) {
+    try {
+      const userId = (req as any).user.id;
+
+      const userRepository = AppDataSource.getRepository(User);
+      const user = await userRepository.findOne({ where: { id: userId } });
+
+      if (!user) {
+        return res.status(404).json({ message: "Пользователь не найден" });
+      }
+
+      const avatar = await generateImageAndUpload('Generate a profile picture for a user with the name ');
+      user.avatar = getFileUrl(avatar!.fileId);
+      await userRepository.save(user);
+
+      return res.json({ avatar: user.avatar, id: userId });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Ошибка сервера" });
+    }
   }
 }

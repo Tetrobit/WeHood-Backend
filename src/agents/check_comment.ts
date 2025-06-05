@@ -49,7 +49,7 @@ const MyAnnotation = Annotation.Root({
 const workflow = new StateGraph(MyAnnotation)
   .addNode("agent", callModel)
   .addEdge("__start__", "agent")
-  .addEdge("agent", "__end__")
+  .addEdge("agent", "__end__");
 
 // Finally, we compile it into a LangChain Runnable.
 const app = workflow.compile();

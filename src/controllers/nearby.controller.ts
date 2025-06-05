@@ -117,4 +117,28 @@ export class NearbyController {
             return res.status(400).json({ error: error.message });
         }
     }
+
+    async deletePost(req: Request, res: Response) {
+        try {
+            const user = req.user!;
+            const postId = parseInt(req.params.postId);
+
+            const post = await this.nearbyService.deletePost(postId, user.id);
+            return res.json(post);
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
+        }
+    }
+
+    async deleteComment(req: Request, res: Response) {
+        try {
+            const user = req.user!;
+            const commentId = parseInt(req.params.commentId);
+
+            const comment = await this.nearbyService.deleteComment(commentId, user.id);
+            return res.json(comment);
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
+        }
+    }
 } 

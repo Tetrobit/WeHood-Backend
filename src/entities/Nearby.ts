@@ -39,6 +39,9 @@ export class NearbyPost {
     @Column({ default: 0 })
     likes: number;
 
+    @Column({ default: false })
+    deleted: boolean;
+
     @CreateDateColumn()
     createdAt: Date;
 
@@ -59,6 +62,9 @@ export class NearbyComment {
 
     @ManyToOne(() => NearbyPost)
     post: NearbyPost;
+
+    @Column({ default: false })
+    deleted: boolean;
 
     @CreateDateColumn()
     createdAt: Date;

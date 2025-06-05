@@ -9,7 +9,6 @@ export async function uploadFile(uri: string): Promise<null | {
     mimeType: string;
 }> {
     const formData = new FormData();
-    console.log(uri);
     const bytes = fs.readFileSync(uri);
     const mimeType = mime.lookup(uri);
     const blob = new Blob([bytes], { type: mimeType });
@@ -29,4 +28,8 @@ export async function uploadFile(uri: string): Promise<null | {
     } catch (error) {
         return null;
     }
+}
+
+export function getFileUrl(fileId: string): string {
+    return process.env.MEDIA_SERVER! + '/files/' + fileId;
 }

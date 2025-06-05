@@ -47,7 +47,8 @@ export class NearbyService {
             lng: longitude,
             lat: latitude,
             radius
-        });
+        })
+        .andWhere('nearby_posts.deleted = :deleted', { deleted: false });
 
         if (type) {
             query.andWhere('nearby_posts.type = :type', { type });
@@ -121,9 +122,35 @@ export class NearbyService {
         if (!post) throw new Error('Post not found');
 
         return this.nearbyCommentRepository.find({
-            where: { post: { id: postId } },
+            where: { post: { id: postId }, deleted: false },
             relations: ['author'],
             order: { createdAt: 'DESC' }
         });
+    }
+
+    async deletePost(postId: number, userId: string): Promise<NearbyPost> {
+        const post = await this.nearbyPostRepository.findOne({ 
+            where: { id: postId },
+            relations: ['author']
+        });
+        
+        if (!post) throw new Error('Post not found');
+        if (post.author.id !== userId) throw new Error('Not authorized to delete this post');
+
+        post.deleted = true;
+        return await this.nearbyPostRepository.save(post);
+    }
+
+    async deleteComment(commentId: number, userId: string): Promise<NearbyComment> {
+        const comment = await this.nearbyCommentRepository.findOne({ 
+            where: { id: commentId },
+            relations: ['author', 'post'],
+        });
+        
+        if (!comment) throw new Error('Comment not found');
+        if (comment.author.id !== userId) throw new Error('Not authorized to delete this comment');
+
+        comment.deleted = true;
+        return await this.nearbyCommentRepository.save(comment);
     }
 }
