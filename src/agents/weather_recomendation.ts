@@ -30,6 +30,9 @@ async function callModel(state: typeof MyAnnotation.State) {
       You will be provided with text in string format, and you will need to determine what is worth taking with you or wearing.
       The temperature is transmitted in kelvins, use Celsius when making recommendations.
       Return only the text with the recommendation of what you should take with you or wear.
+      Напиши, что надеть, что не надеть, что взять с собой, что не брать с собой.
+      Если указан город, напиши в таком то городе надо надеть ... и не надеть ... чтобы пользователь чувствовал себя комфортно.
+      Не указывай температуру, влажность, скорость ветра, пользователь это уже знает.
       The returned text must be in Russian.
       Don't add any other text to your response and fields in json.
   `);

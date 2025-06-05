@@ -5,5 +5,6 @@ const router = Router();
 const weatherController = new WeatherController();
 
 router.get('/forecast', weatherController.getForecast);
+router.post('/ai-recommendation', weatherController.getClothingRecommendation);
 
 export default router; 
