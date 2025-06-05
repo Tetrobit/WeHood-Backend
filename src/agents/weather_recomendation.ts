@@ -1,13 +1,11 @@
 import { HumanMessage, SystemMessage, BaseMessage } from "@langchain/core/messages";
-import { StateGraph, MessagesAnnotation, Annotation } from "@langchain/langgraph";
+import { StateGraph, Annotation } from "@langchain/langgraph";
 
 import { z } from "zod";
 import { llm } from "./gigachat";
 
 const model = llm.withStructuredOutput(z.object({
-  ok: z.boolean(),
-  reason: z.string().optional(),
-  toxicity_score: z.number({ description: "Toxicity score of the comment from 0 to 1" }),
+  recomendation: z.string(),
 }));
 
 // Define a new graph
@@ -17,14 +15,10 @@ const MyAnnotation = Annotation.Root({
     default: () => [],
   }),
   verdict: Annotation<{
-    ok: boolean,
-    reason?: string,
-    toxicity_score: number,
+    recomendation: string,
   }>({
     reducer: (_prev, curr) => ({
-      ok: curr.ok,
-      reason: curr.reason,
-      toxicity_score: curr.toxicity_score,
+      recomendation: curr.recomendation,
     }),
   }),
 });
@@ -32,12 +26,11 @@ const MyAnnotation = Annotation.Root({
 // Define the function that calls the model
 async function callModel(state: typeof MyAnnotation.State) {
   const systemMessage = new SystemMessage(`
-      You are a helpful assistant that checks if a comment is bad.
-      You will be given a comment and you will need to check if it is bad.
-      If it is bad, you will return ok false and reason.
-      If it is not bad, you will return ok true and reason.
-      Reason should be a short description of why the comment is bad.
-      Also write reason in russian.
+      You are a helpful assistant that help with choosing clothes in the weather.
+      You will be provided with text in string format, and you will need to determine what is worth taking with you or wearing.
+      The temperature is transmitted in kelvins, use Celsius when making recommendations.
+      Return only the text with the recommendation of what you should take with you or wear.
+      The returned text must be in Russian.
       Don't add any other text to your response and fields in json.
   `);
   const response = await model.invoke([systemMessage, ...state.messages]);
@@ -52,15 +45,13 @@ async function callModel(state: typeof MyAnnotation.State) {
 const workflow = new StateGraph(MyAnnotation)
   .addNode("agent", callModel)
   .addEdge("__start__", "agent")
-  .addEdge("agent", "__end__");
+  .addEdge("agent", "__end__")
 
 // Finally, we compile it into a LangChain Runnable.
 const app = workflow.compile();
 
-export async function checkComment(comment: string): Promise<undefined | {
-  ok?: boolean;
-  reason?: string;
-  toxicity_score?: number;
+export async function WeatherRec(comment: string): Promise<{
+  recomendation: string;
 }> {
   // Use the agent
   const finalState = await app.invoke({

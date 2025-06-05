@@ -8,7 +8,10 @@
     "dev": "nodemon src/index.ts",
     "build": "tsc",
     "typeorm": "typeorm-ts-node-commonjs",
-    "test:check-comment": "tsx --env-file=.env ./test/check_comment.ts"
+    "test:check-comment": "tsx --env-file=.env ./test/check_comment.ts",
+    "test:check-weather": "tsx --env-file=.env ./test/weather_recomendation.ts",
+    "test:check-summ-comments": "tsx --env-file=.env ./test/summ_comments.ts",
+    "test:c1": "tsx --env-file=.env ./test/gen_ava.ts"
   },
   "dependencies": {
     "@langchain/community": "^0.3.45",
