@@ -13,5 +13,6 @@ router.get("/check-email-exists", authController.checkEmailExists);
 router.get("/send-verification-code", authController.sendVerificationCode);
 router.post("/verify-verification-code", authController.verifyVerificationCode);
 router.get("/is-token-valid", authController.isTokenValid);
+router.post("/update-profile", authController.updateProfile);
 
 export default router; 

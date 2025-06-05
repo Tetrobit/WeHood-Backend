@@ -274,4 +274,33 @@ export class AuthController {
   async isTokenValid(_req: Request, res: Response) {
     return res.json({ ok: true });
   }
+
+  async updateProfile(req: Request, res: Response) {
+    try {
+      const { firstName, lastName, avatar } = req.body;
+      const userId = (req as any).user.id;
+
+      const userRepository = AppDataSource.getRepository(User);
+      const user = await userRepository.findOne({ where: { id: userId } });
+
+      if (!user) {
+        return res.status(404).json({ message: "Пользователь не найден" });
+      }
+
+      if (firstName) user.firstName = firstName;
+      if (lastName) user.lastName = lastName;
+      if (avatar) user.avatar = avatar;
+
+      await userRepository.save(user);
+
+      return res.json({
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatar: user.avatar
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Ошибка сервера" });
+    }
+  }
 }
