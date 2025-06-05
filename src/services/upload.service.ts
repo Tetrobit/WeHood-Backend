@@ -29,3 +29,7 @@ export async function uploadFile(uri: string): Promise<null | {
         return null;
     }
 }
+
+export function getFileUrl(fileId: string): string {
+    return process.env.MEDIA_SERVER! + '/files/' + fileId;
+}
