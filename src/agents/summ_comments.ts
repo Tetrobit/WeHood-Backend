@@ -11,12 +11,8 @@ const MyAnnotation = Annotation.Root({
     reducer: (prev, curr) => [...prev, ...curr],
     default: () => [],
   }),
-  summary: Annotation<{
-    summary: string,
-  }>({
-    reducer: (_prev, curr) => ({
-      summary: curr.summary,
-    }),
+  summary: Annotation<string>({
+    reducer: (_prev, curr) => curr
   }),
 });
 
@@ -66,13 +62,12 @@ async function callSummarizer(state: typeof MyAnnotation.State) {
   const humanMessage = new HumanMessage(`Вот комментарии:\n${joinedComments}`);
 
   const response = (await model.invoke([systemMessage, humanMessage])).content;
-  console.log("Ответ модели (response): ", response);
 
   // let summary = "";
   // if (typeof response === "string") summary = response;
   // else if (response && typeof response.content === "string") summary = response.content;
   // else summary = String(response);
-  return { messages: [], summary: { response } };
+  return { messages: [], summary: response };
 }
 
 const workflow = new StateGraph(MyAnnotation)
@@ -86,5 +81,5 @@ export async function summarizeComments(comments: string[]): Promise<string> {
   // Каждый комментарий — отдельное сообщение
   const messages = comments.map((c) => new HumanMessage(c));
   const finalState = await app.invoke({ messages });
-  return finalState.summary.summary;
+  return finalState.summary;
 } 
