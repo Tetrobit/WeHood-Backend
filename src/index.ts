@@ -16,6 +16,7 @@ import notificationRoutes from "./routes/notification.routes";
 import pollRoutes from "./routes/poll.routes";
 import { softAuthMiddleware } from './middleware/auth.middleware';
 import bodyParser from "body-parser";
+import { initializeAIAgent } from './services/ai-agent.service';
 config();
 
 const app = express();
@@ -31,8 +32,8 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/utils", utilsRoutes);
 app.use("/api/telemetry", telemetryRoutes);
+app.use("/api/utils", utilsRoutes);
 app.use("/api/geocoding", geocodingRoutes);
 app.use("/api/weather", weatherRoutes);
 app.use("/api/nearby", nearbyRoutes);
@@ -44,8 +45,12 @@ app.use(errorMiddleware);
 const PORT = process.env.PORT || 3000;
 
 AppDataSource.initialize()
-  .then(() => {
+  .then(async () => {
     console.log("База данных успешно подключена");
+    
+    // Инициализируем ИИ агента
+    await initializeAIAgent();
+    
     app.listen(PORT, () => {
       console.log(`Сервер запущен на порту ${PORT}`);
     });
