@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm";
 import * as bcrypt from "bcryptjs";
 import { DeviceLogin } from "./DeviceLogin";
+import { Notification } from "./Notification";
 
 @Entity("users")
 export class User {
@@ -33,6 +34,9 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt: Date;
+  
+  @OneToMany(() => Notification, notification => notification.user)
+  notifications: Notification[];
 
   async hashPassword() {
     this.password = await bcrypt.hashSync(this.password);
