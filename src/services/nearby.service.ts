@@ -3,18 +3,22 @@ import { AppDataSource } from '../config/database';
 import { NearbyPost, NearbyComment, NearbyLike } from '../entities/Nearby';
 import { User } from '../entities/User';
 import { NotificationService } from './notification.service';
+import { PollService } from './poll.service';
+import { commentToPoll } from '../agents/comment_to_poll';
 
 export class NearbyService {
     private nearbyPostRepository: Repository<NearbyPost>;
     private nearbyCommentRepository: Repository<NearbyComment>;
     private nearbyLikeRepository: Repository<NearbyLike>;
     private notificationService: NotificationService;
+    private pollService: PollService;
 
     constructor() {
         this.nearbyPostRepository = AppDataSource.getRepository(NearbyPost);
         this.nearbyCommentRepository = AppDataSource.getRepository(NearbyComment);
         this.nearbyLikeRepository = AppDataSource.getRepository(NearbyLike);
         this.notificationService = new NotificationService();
+        this.pollService = new PollService();
     }
 
     async createPost(user: User, data: {
@@ -74,7 +78,35 @@ export class NearbyService {
             post
         });
 
-        return this.nearbyCommentRepository.save(comment);
+        const savedComment = await this.nearbyCommentRepository.save(comment);
+        this.checkForCreatePoll(savedComment.post.id);
+        return savedComment;
+    }
+    
+    async checkForCreatePoll(postId: number) {
+        const post = await this.nearbyPostRepository.findOne({ where: { id: postId } });
+
+        if (!post) return;
+        if (post.poll) return;
+
+        // Проверяем последние 30 комментариев для создания голосования
+        const recentComments = await this.nearbyCommentRepository.find({
+            where: { post: { id: postId }, deleted: false },
+            order: { createdAt: 'DESC' },
+            take: 30
+        });
+
+        if (recentComments.length < 3) return;
+
+        const pollResult = await commentToPoll(recentComments.map(c => c.text));
+        
+        if (!pollResult?.shouldCreatePoll || !pollResult.poll) return;
+
+        try {
+            await this.pollService.createPollBasedOnPost(post, pollResult.poll);
+        } catch (error) {
+            console.error('Error creating poll:', error);
+        }
     }
 
     async toggleLike(user: User, postId: number): Promise<{ views: number, liked: boolean, likes: number }> {

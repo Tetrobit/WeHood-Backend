@@ -1,5 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, Geometry } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, Geometry, OneToOne } from 'typeorm';
 import { User } from './User';
+import { Poll } from './Poll';
 
 @Entity('nearby_posts')
 export class NearbyPost {
@@ -41,6 +42,9 @@ export class NearbyPost {
 
     @Column({ default: false })
     deleted: boolean;
+
+    @OneToOne(() => Poll, poll => poll.post, { nullable: true })
+    poll: Poll;
 
     @CreateDateColumn()
     createdAt: Date;

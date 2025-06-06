@@ -1,7 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './User';
+import { NearbyPost } from './Nearby';
 
-@Entity()
+@Entity('polls')
 export class Poll {
   @PrimaryGeneratedColumn()
   id: number;
@@ -18,9 +19,16 @@ export class Poll {
     votes: number;
   }[];
 
+  @Column({ nullable: true })
+  image: string;
+
   @ManyToOne(() => User)
   @JoinColumn()
   createdBy: User;
+
+  @ManyToOne(() => NearbyPost)
+  @JoinColumn()
+  post: NearbyPost;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -30,7 +38,24 @@ export class Poll {
 
   @Column({ default: true })
   isActive: boolean;
+}
 
-  @Column({ nullable: true })
-  image: string;
+@Entity('poll_votes')
+export class PollVote {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @ManyToOne(() => User)
+  @JoinColumn()
+  user: User;
+
+  @ManyToOne(() => Poll)
+  @JoinColumn()
+  poll: Poll;
+
+  @Column()
+  optionIndex: number;
+
+  @CreateDateColumn()
+  createdAt: Date;
 } 

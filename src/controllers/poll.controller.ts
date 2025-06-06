@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
-import { Poll } from '../entities/Poll';
-import { PollVote } from '../entities/PollVote';
+import { Poll, PollVote } from '../entities/Poll';
 import { AppDataSource } from '../config/database';
 
 const pollRepository = AppDataSource.getRepository(Poll);
