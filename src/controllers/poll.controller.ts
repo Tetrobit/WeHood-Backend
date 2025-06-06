@@ -162,9 +162,12 @@ export const getPoll = async (req: Request, res: Response) => {
 
 export const getPolls = async (req: Request, res: Response) => {
   try {
-    const { offset = 0, limit = 10 } = req.query;
+    const { offset = 0, limit = 10, userId } = req.query;
+    
+    const whereCondition = userId ? { createdBy: { id: String(userId) } } : {};
 
     const [polls, total] = await pollRepository.findAndCount({
+      where: whereCondition,
       relations: ['createdBy'],
       order: { createdAt: 'DESC' },
       skip: Number(offset),
