@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { Poll } from '../entities/Poll';
 import { PollVote } from '../entities/PollVote';
 import { AppDataSource } from '../config/database';
-import { In } from 'typeorm';
 
 const pollRepository = AppDataSource.getRepository(Poll);
 const pollVoteRepository = AppDataSource.getRepository(PollVote);
@@ -11,6 +10,53 @@ export const createPoll = async (req: Request, res: Response) => {
   try {
     const { title, description, options, endDate, image } = req.body;
     const userId = req.user!.id;
+
+    // Проверка обязательных полей
+    if (!title || !description || !options || !Array.isArray(options) || options.length === 0) {
+      return res.status(400).json({ 
+        message: 'Необходимо указать заголовок, описание и хотя бы один вариант ответа' 
+      });
+    }
+
+    // Проверка длины заголовка
+    if (title.length < 3 || title.length > 100) {
+      return res.status(400).json({ 
+        message: 'Заголовок должен содержать от 3 до 100 символов' 
+      });
+    }
+
+    // Проверка длины описания
+    if (description.length < 0 || description.length > 1000) {
+      return res.status(400).json({ 
+        message: 'Описание должно содержать от 10 до 1000 символов' 
+      });
+    }
+
+    // Проверка количества вариантов ответа
+    if (options.length < 1 || options.length > 10) {
+      return res.status(400).json({ 
+        message: 'Количество вариантов ответа должно быть от 2 до 10' 
+      });
+    }
+
+    // Проверка длины каждого варианта ответа
+    for (const option of options) {
+      if (typeof option !== 'string' || option.length < 1 || option.length > 100) {
+        return res.status(400).json({ 
+          message: 'Каждый вариант ответа должен содержать от 1 до 100 символов' 
+        });
+      }
+    }
+
+    // Проверка даты окончания
+    if (endDate) {
+      const endDateObj = new Date(endDate);
+      if (isNaN(endDateObj.getTime()) || endDateObj <= new Date()) {
+        return res.status(400).json({ 
+          message: 'Дата окончания должна быть в будущем' 
+        });
+      }
+    }
 
     const poll = new Poll();
     poll.title = title;
@@ -117,31 +163,18 @@ export const getPoll = async (req: Request, res: Response) => {
 export const getPolls = async (req: Request, res: Response) => {
   try {
     const { offset = 0, limit = 10 } = req.query;
-    const userId = req.user!.id;
-    
-    const polls = await pollRepository.find({
+
+    const [polls, total] = await pollRepository.findAndCount({
       relations: ['createdBy'],
       order: { createdAt: 'DESC' },
       skip: Number(offset),
       take: Number(limit)
     });
 
-    // Получаем голоса пользователя для всех опросов
-    const userVotes = await pollVoteRepository.find({
-      where: {
-        user: { id: userId },
-        poll: { id: In(polls.map(p => p.id)) }
-      }
+    return res.json({
+      votings: polls,
+      total
     });
-
-    // Добавляем информацию о голосах пользователя к каждому опросу
-    const pollsWithUserVotes = polls.map(poll => ({
-      ...poll,
-      userVoted: userVotes.some(vote => vote.poll.id === poll.id),
-      userVoteOption: userVotes.find(vote => vote.poll.id === poll.id)?.optionIndex
-    }));
-
-    return res.json(pollsWithUserVotes);
   } catch (error) {
     return res.status(500).json({ message: 'Ошибка при получении списка голосований' });
   }
