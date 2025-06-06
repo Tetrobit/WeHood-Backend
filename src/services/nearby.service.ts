@@ -103,13 +103,13 @@ export class NearbyService {
             await this.nearbyPostRepository.save(post);
 
             // Отправляем уведомление автору поста
-            if (post.author.id !== user.id || true) {
+            if (post.author.id !== user.id) {
                 const authorName = `${user.firstName} ${user.lastName}`.trim();
                 await this.notificationService.createNotification(
                     post.author.id,
                     'Новый лайк',
                     `${authorName} поставил(а) лайк вашему посту ${post.title ? `"${post.title}"` : 'Без названия'}`,
-                    'like',
+                    'nearby_like',
                     { postId: post.id, userId: user.id }
                 );
 

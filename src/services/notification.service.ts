@@ -50,7 +50,10 @@ export class NotificationService {
       take: limit,
     });
 
-    return { notifications, total };
+    return { notifications: notifications.map(notification => ({
+      ...notification,
+      data: notification.data ? JSON.parse(notification.data) : undefined
+    })), total };
   }
 
   async markAsRead(notificationId: number, userId: string): Promise<Notification> {

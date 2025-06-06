@@ -17,7 +17,10 @@ export class NotificationController {
     queryBuilder.orderBy('notification.createdAt', 'DESC');
 
     const notifications = await queryBuilder.skip(Number(offset)).take(Number(limit)).getMany();
-    return res.status(200).json(notifications);
+    return res.status(200).json(notifications.map(notification => ({
+      ...notification,
+      data: notification.data ? JSON.parse(notification.data) : undefined
+    })));
   }
 
   async markAsRead(req: Request, res: Response) {
