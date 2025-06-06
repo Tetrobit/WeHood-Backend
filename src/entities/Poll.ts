@@ -30,4 +30,7 @@ export class Poll {
 
   @Column({ default: true })
   isActive: boolean;
+
+  @Column({ nullable: true })
+  image: string;
 } 
