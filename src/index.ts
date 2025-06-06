@@ -13,6 +13,7 @@ import weatherRoutes from "./routes/weather.routes";
 import { errorMiddleware } from "./middleware/error.middleware";
 import nearbyRoutes from "./routes/nearby.routes";
 import notificationRoutes from "./routes/notification.routes";
+import pollRoutes from "./routes/poll.routes";
 import { softAuthMiddleware } from './middleware/auth.middleware';
 import bodyParser from "body-parser";
 config();
@@ -36,6 +37,7 @@ app.use("/api/geocoding", geocodingRoutes);
 app.use("/api/weather", weatherRoutes);
 app.use("/api/nearby", nearbyRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/polls", pollRoutes);
 
 app.use(errorMiddleware);
 
