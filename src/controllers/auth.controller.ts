@@ -357,6 +357,7 @@ export class AuthController {
   async generateAvatar(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
+      const { prompt } = req.query;
 
       const userRepository = AppDataSource.getRepository(User);
       const user = await userRepository.findOne({ where: { id: userId } });
@@ -365,7 +366,7 @@ export class AuthController {
         return res.status(404).json({ message: "Пользователь не найден" });
       }
 
-      const avatar = await generateImageAndUpload('Generate a profile picture for a user with the name ');
+      const avatar = await generateImageAndUpload(`Generate a profile picture for a user with the name ${user.firstName} ${user.lastName} and the prompt ${prompt}`);
       user.avatar = getFileUrl(avatar!.fileId);
       await userRepository.save(user);
 
