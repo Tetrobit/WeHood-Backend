@@ -25,7 +25,7 @@ export class AuthController {
 
   async register(req: Request, res: Response) {
     try {
-      const { firstName, lastName, email, password, verificationCodeId } = req.body;
+      const { firstName, lastName, email, password, verificationCodeId, fcm_token } = req.body;
 
       const userRepository = AppDataSource.getRepository(User);
       const existingUser = await userRepository.findOne({ where: { email } });
@@ -64,6 +64,7 @@ export class AuthController {
       deviceLogin.deviceOS = req.body.device_os as string;
       deviceLogin.deviceOSVersion = req.body.device_os_version as string;
       deviceLogin.deviceParams = req.body.device_params as Record<string, any>;
+      deviceLogin.fcmToken = fcm_token;
       deviceLogin.user = user;
 
       await AppDataSource.getRepository(DeviceLogin).save(deviceLogin);
@@ -124,7 +125,7 @@ export class AuthController {
 
   async login(req: Request, res: Response) {
     try {
-      const { email, password } = req.body;
+      const { email, password, fcm_token } = req.body;
 
       const userRepository = AppDataSource.getRepository(User);
       const user = await userRepository.findOne({ where: { email } });
@@ -144,6 +145,7 @@ export class AuthController {
       deviceLogin.deviceOS = req.body.device_os as string;
       deviceLogin.deviceOSVersion = req.body.device_os_version as string;
       deviceLogin.deviceParams = req.body.device_params as Record<string, any>;
+      deviceLogin.fcmToken = fcm_token;
       deviceLogin.user = user;
 
       await AppDataSource.getRepository(DeviceLogin).save(deviceLogin);
@@ -201,7 +203,7 @@ export class AuthController {
   }
 
   async loginVK(req: Request, res: Response) {
-    const { code, code_verifier, device_id, state } = req.body;
+    const { code, code_verifier, device_id, state, fcm_token } = req.body;
 
     const data = await vkapi.exchangeCode(code as string, code_verifier as string, device_id as string, state as string);
     const accessToken: string = data.access_token;
@@ -241,6 +243,7 @@ export class AuthController {
     deviceLogin.deviceOS = req.body.device_os as string;
     deviceLogin.deviceOSVersion = req.body.device_os_version as string;
     deviceLogin.deviceParams = req.body.device_params as Record<string, any>;
+    deviceLogin.fcmToken = fcm_token;
     deviceLogin.refreshToken = refreshToken;
     deviceLogin.accessToken = accessToken;
     deviceLogin.refreshTokenExpiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 180);

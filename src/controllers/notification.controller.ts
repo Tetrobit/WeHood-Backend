@@ -1,19 +1,20 @@
 import { Request, Response } from 'express';
 import { AppDataSource } from '../config/database';
 import { Notification } from '../entities/Notification';  
+import { User } from '@/entities/User';
 
 const notificationRepository = AppDataSource.getRepository(Notification);
 
 export class NotificationController {
 
-  async getUserNotifications(req: Request, res: Response) {
-    const { offset = 0, limit = 20, userId } = req.query;
+  async getUserNotifications(req: Request, res: Response) {    console.log(req.query);
+    const { offset = 0, limit = 20 } = req.query;
+    const user = req.user as User;
 
     const queryBuilder = notificationRepository.createQueryBuilder('notification');
 
-    if (userId) {
-      queryBuilder.andWhere('notification.user.id = :userId', { userId });
-    }
+    queryBuilder.andWhere('notification.user.id = :userId', { userId: user.id });
+    queryBuilder.orderBy('notification.createdAt', 'DESC');
 
     const notifications = await queryBuilder.skip(Number(offset)).take(Number(limit)).getMany();
     return res.status(200).json(notifications);

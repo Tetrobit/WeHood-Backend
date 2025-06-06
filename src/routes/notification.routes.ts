@@ -9,7 +9,7 @@ const notificationController = new NotificationController();
 router.use(softAuthMiddleware, authGuard);
 
 router.get('/',notificationController.getUserNotifications.bind(notificationController));
-router.post('/:id/read', notificationController.markAsRead.bind(notificationController));
-router.post('/read-all', notificationController.markAllAsRead.bind(notificationController));
+router.put('/:id/read', notificationController.markAsRead.bind(notificationController));
+router.put('/read-all', notificationController.markAllAsRead.bind(notificationController));
 
 export default router; 

@@ -30,6 +30,9 @@ export class DeviceLogin {
     @Column({ nullable: true })
     accessTokenExpiresAt: Date;
 
+    @Column({ nullable: true })
+    fcmToken: string;
+
     @ManyToOne(() => User, user => user.deviceLogins)
     user: User;
 
