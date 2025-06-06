@@ -2,16 +2,19 @@ import { Repository } from 'typeorm';
 import { AppDataSource } from '../config/database';
 import { NearbyPost, NearbyComment, NearbyLike } from '../entities/Nearby';
 import { User } from '../entities/User';
+import { NotificationService } from './notification.service';
 
 export class NearbyService {
     private nearbyPostRepository: Repository<NearbyPost>;
     private nearbyCommentRepository: Repository<NearbyComment>;
     private nearbyLikeRepository: Repository<NearbyLike>;
+    private notificationService: NotificationService;
 
     constructor() {
         this.nearbyPostRepository = AppDataSource.getRepository(NearbyPost);
         this.nearbyCommentRepository = AppDataSource.getRepository(NearbyComment);
         this.nearbyLikeRepository = AppDataSource.getRepository(NearbyLike);
+        this.notificationService = new NotificationService();
     }
 
     async createPost(user: User, data: {
@@ -75,7 +78,10 @@ export class NearbyService {
     }
 
     async toggleLike(user: User, postId: number): Promise<{ views: number, liked: boolean, likes: number }> {
-        const post = await this.nearbyPostRepository.findOne({ where: { id: postId } });
+        const post = await this.nearbyPostRepository.findOne({ 
+            where: { id: postId },
+            relations: ['author']
+        });
         if (!post) throw new Error('Post not found');
 
         const existingLike = await this.nearbyLikeRepository.findOne({
@@ -95,6 +101,31 @@ export class NearbyService {
             await this.nearbyLikeRepository.save(like);
             post.likes++;
             await this.nearbyPostRepository.save(post);
+
+            // Отправляем уведомление автору поста
+            if (post.author.id !== user.id || true) {
+                const authorName = `${user.firstName} ${user.lastName}`.trim();
+                await this.notificationService.createNotification(
+                    post.author.id,
+                    'Новый лайк',
+                    `${authorName} поставил(а) лайк вашему посту ${post.title ? `"${post.title}"` : 'Без названия'}`,
+                    'like',
+                    { postId: post.id, userId: user.id }
+                );
+
+                // Отправляем push-уведомление
+                try {
+                    await this.notificationService.sendPushNotification(
+                        post.author.id,
+                        'Новый лайк',
+                        `${authorName} поставил(а) лайк вашему посту ${post.title ? `"${post.title}"` : 'Без названия'}`,
+                        { type: 'like', postId: post.id, userId: user.id }
+                    );
+                } catch (error) {
+                    console.error('Error sending push notification:', error);
+                }
+            }
+
             return { views: post.views, liked: true, likes: post.likes };
         }
     }
