@@ -4,12 +4,14 @@ import { Poll } from '../entities/Poll';
 import { User } from '../entities/User';
 import { NearbyPost } from '../entities/Nearby';
 import { generateImageAndUpload } from '../agents/generate_image';
+import { NotificationService } from './notification.service';
 
 export class PollService {
     private pollRepository: Repository<Poll>;
-
+    private notificationService: NotificationService;
     constructor() {
         this.pollRepository = AppDataSource.getRepository(Poll);
+        this.notificationService = new NotificationService();
     }
 
     async createPollBasedOnPost(post: NearbyPost, data: {
@@ -17,7 +19,11 @@ export class PollService {
         description: string;
         options: string[];
         image: string;
-    }): Promise<Poll> {
+    }): Promise<void> {
+        // Получить автора поста, при этом в post.author будет undefined
+        const postAuthor = await AppDataSource.getRepository(NearbyPost).findOne({ where: { id: post.id }, relations: ['author'] });
+        if (!postAuthor) throw new Error('Post not found');
+        
         // Проверяем, нет ли уже голосования для этого поста
         const existingPoll = await this.pollRepository.findOne({
             where: { post: { id: post.id } }
@@ -43,6 +49,28 @@ export class PollService {
             options: data.options.map(text => ({ text, votes: 0 }))
         });
 
-        return await this.pollRepository.save(poll);
+        await this.pollRepository.save(poll);
+
+        // Отправить уведомление автору поста
+        await this.notificationService.createNotification(
+            postAuthor.author.id,
+            'Новое голосование',
+            `На основе комментариев пользователей создано голосование ${poll.title ? `"${poll.title}"` : 'Без названия'}`,
+            'nearby_poll',
+            {
+                pollId: poll.id,
+                postId: post.id,
+            }
+        );
+
+        await this.notificationService.sendPushNotification(
+            postAuthor.author.id,
+            'Новое голосование',
+            `На основе комментариев пользователей создано голосование ${poll.title ? `"${poll.title}"` : 'Без названия'}`,
+            {
+                pollId: poll.id,
+                postId: post.id,
+            }
+        );
     }
 } 
