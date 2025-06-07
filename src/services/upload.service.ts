@@ -1,6 +1,6 @@
 import axios from 'axios';
 import fs from 'fs';
-import mime from 'mime';
+import { lookup } from 'mime-types';
 
 export async function uploadFile(uri: string): Promise<null | {
     fileId: string;
@@ -10,7 +10,7 @@ export async function uploadFile(uri: string): Promise<null | {
 }> {
     const formData = new FormData();
     const bytes = fs.readFileSync(uri);
-    const mimeType = mime.lookup(uri);
+    const mimeType = lookup(uri) || 'application/octet-stream';
     const blob = new Blob([bytes], { type: mimeType });
     formData.append('file', blob, uri.split('/').pop()!);
     const request_config = {
