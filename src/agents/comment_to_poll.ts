@@ -9,7 +9,7 @@ const model = llm.withStructuredOutput(z.object({
   poll: z.object({
     title: z.string({ description: "Заголовок опроса, короткий, не более 20 символов" }),
     description: z.string({ description: "Описание опроса, не более 200 символов" }),
-    options: z.array(z.string({ description: "Варианты ответа, не более 10 и каждый не более 50 символов" })),
+    options: z.array(z.string({ description: "Варианты ответа, не менее 2 вариантов и не более 10, и каждый не более 50 символов" })),
     image: z.string({ description: "Какая иллюстрация подходит к опросу? Опиши её в не более 200 символов" }),
   }),
 }));
@@ -45,6 +45,7 @@ async function callModel(state: typeof MyAnnotation.State) {
     Опрос должен быть создан на основе комментариев.
     Если комментариев мало, то не создавай опрос.
     Если комментариев много, то создай опрос.
+    Вариантов ответа должно быть не менее 2 и не более 10.
     Опрос должен быть создан на основе комментариев.
   `);
   const response = await model.invoke([systemMessage, ...state.messages]);
