@@ -14,7 +14,8 @@ import { errorMiddleware } from "./middleware/error.middleware";
 import nearbyRoutes from "./routes/nearby.routes";
 import notificationRoutes from "./routes/notification.routes";
 import pollRoutes from "./routes/poll.routes";
-import speechRoutes from './routes/speech.routes'
+import speechRoutes from './routes/speech.routes';
+import searchRoutes from './routes/search.route';
 import { softAuthMiddleware } from './middleware/auth.middleware';
 import bodyParser from "body-parser";
 import { initializeAIAgent } from './services/ai-agent.service';
@@ -41,6 +42,7 @@ app.use("/api/nearby", nearbyRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/polls", pollRoutes);
 app.use("/api/speech", speechRoutes);
+app.use("/api/search", searchRoutes);
 
 app.use(errorMiddleware);
 
