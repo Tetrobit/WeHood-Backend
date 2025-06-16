@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { Thread } from '@/entities/Thread';
 import { AppDataSource } from '@/config/database';
+import { search } from '@/agents/search';
+import { textToSpeech } from './speech.controller';
 
 export class SearchController {
     private threadRepository = AppDataSource.getRepository(Thread);;
@@ -21,29 +23,19 @@ export class SearchController {
                 thread.messages = [];
             }
 
-            // Добавляем сообщение пользователя
-            thread.messages.push({
-                role: 'user',
-                content: text,
-                timestamp: new Date()
-            });
-
-            // Добавляем ответ ассистента (пока просто эхо)
-            const assistantResponse = text;
-            thread.messages.push({
-                role: 'assistant',
-                content: assistantResponse,
-                timestamp: new Date()
-            });
+            // Добавляем ответ ассистента
+            const { messages, response, audio_support } = await search(thread.messages, text, thread_id);
+            thread.messages = messages;
 
             // Сохраняем обновленный тред
             await this.threadRepository.save(thread);
 
+            const audio_id = await textToSpeech(audio_support, true);
+
             const responseBody = {
                 thread_id: thread.id,
-                message: {
-                    content: assistantResponse
-                }
+                message: response,
+                audio_id
             };
 
             return res.status(200).json(responseBody);

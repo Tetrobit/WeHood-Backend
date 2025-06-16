@@ -6,11 +6,7 @@ export class Thread {
     id: string;
 
     @Column('jsonb', { default: [] })
-    messages: Array<{
-        role: 'user' | 'assistant';
-        content: string;
-        timestamp: Date;
-    }>;
+    messages: Array<any>;
 
     @CreateDateColumn()
     created_at: Date;

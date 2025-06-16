@@ -50,7 +50,7 @@ function convertToMpeg(uri: string): Promise<string> {
     })
 }
 
-async function textToSpeech(text: string): Promise<string> {
+export async function textToSpeech(text: string, ssml: boolean = false): Promise<string> {
     const token = await getToken();
 
     let config: AxiosRequestConfig<string> = {
@@ -58,7 +58,7 @@ async function textToSpeech(text: string): Promise<string> {
         maxBodyLength: Infinity,
         url: 'https://smartspeech.sber.ru/rest/v1/text:synthesize',
         headers: { 
-            'Content-Type': 'application/text', 
+            'Content-Type': ssml ? 'application/ssml' : 'application/text',
             'Accept': 'audio/x-wav', 
             'Authorization': `Bearer ${token}`
         },
