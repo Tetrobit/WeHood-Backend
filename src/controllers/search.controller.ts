@@ -9,7 +9,7 @@ export class SearchController {
 
     async chat(req: Request, res: Response) {
         try {
-            const { text, thread_id } = req.body;
+            const { text, thread_id, context } = req.body;
             
             let thread: Thread | null;
             
@@ -24,7 +24,7 @@ export class SearchController {
             }
 
             // Добавляем ответ ассистента
-            const { messages, response, audio_support } = await search(thread.messages, text, thread_id);
+            const { messages, response, audio_support, commands } = await search(thread.messages, text, thread_id, context);
             thread.messages = messages;
 
             // Сохраняем обновленный тред
@@ -35,7 +35,8 @@ export class SearchController {
             const responseBody = {
                 thread_id: thread.id,
                 message: response,
-                audio_id
+                audio_id,
+                commands
             };
 
             return res.status(200).json(responseBody);

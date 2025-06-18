@@ -6,11 +6,16 @@ async function main() {
     // start("Это было так красиво, что у меня пошли мурашки по коже")
     const { text } = await prompts({
         type: "text",
-        message: "Введите комментарий: ",
+        message: "Введите запрос: ",
         name: "text",
     });
 
-    console.log(await search([], text, undefined));
+    console.log(await search([], text, undefined, {
+        geolocation: '',
+        name: '',
+        theme: '',
+        weather: '',
+    }));
 }
 
 main();
